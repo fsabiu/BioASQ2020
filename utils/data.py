@@ -15,11 +15,12 @@ def load_data_list(csv_file):
               for question in training["questions"] if question["type"] == "list"]
     return output
 
-def load_data(csv_file, questionType):
+def load_data(csv_file, questionType, singleSnippets = False):
     """
     Parameters:
     - csv_file: JSON input file
     - questionType: type of the questions to be retrieved
+    - singleSnippets: boolean value specifying whether <question, snippet> pairs must be returned
 
     Return:
     - list of <body, exact answer, ideal answer, snippet list> for each question of the questionType type.
@@ -30,8 +31,22 @@ def load_data(csv_file, questionType):
     # Opening training set
     with open(csv_file, "r") as read_file:
         training = json.load(read_file)
-    output = [[question["body"], question["exact_answer"], question["ideal_answer"], [snippet["text"] for snippet in question["snippets"]]]
-              for question in training["questions"] if question["type"] == questionType]
+
+    output = []
+    append = output.append
+    
+    if(singleSnippets == False):
+      output = [[question["body"], question["exact_answer"], question["ideal_answer"], [snippet["text"] for snippet in question["snippets"]]]
+                for question in training["questions"] if question["type"] == questionType]
+    else:
+      for question in training["questions"]:
+        for snippet in question["snippets"]:
+          if question["type"] == questionType:
+            try:
+              append([question["body"], question["exact_answer"], question["ideal_answer"], snippet])
+            except:
+              print("Missing fields")
+    
     return output
 
 def clean_synonyms(list_question):
@@ -187,3 +202,4 @@ def data_split(X, y, y_size):
   Returns X_train,X_test,y_train,y_test depending on the split ratio y_size
   """
   return train_test_split(X,y,test_size=y_size)
+

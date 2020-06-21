@@ -4,12 +4,11 @@ keras
 num2words
 numpy
 pandas
-pickle
 progressbar
 pubmed_lookup
 pydot
 requests
-sklearn.model_selection
+sklearn
 tensorflow
 torch===1.4.0
 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html
