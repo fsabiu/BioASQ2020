@@ -1,4 +1,5 @@
 import json
+import re
 from flair.data import Sentence
 import progressbar
 import pickle
@@ -203,3 +204,35 @@ def data_split(X, y, y_size):
   """
   return train_test_split(X,y,test_size=y_size)
 
+def find_sub_list(sl,l):
+  """
+  Parameters:
+  - sl is a list of strings (words)
+  - l is a list of strings following the pattern a::['SEP']::b with a and b ebentually being empty.
+
+  Returns:
+  - A list of all the initial and final indices (tuples) of l at which sl starts and ends, if any.
+  - Else, empty list
+  """
+    results=[]
+    sll=len(sl)
+    for ind in (i for i,e in enumerate(l) if e==sl[0]):
+        if (l[ind:ind+sll]==sl and ind>l.index('[SEP]')):
+            results.append((ind,ind+sll-1))
+    return results
+
+def getsubIndices(subs, s):
+"""
+Parameters:
+- s: a string
+- subs: the pattern to be identified in s
+
+Returns:
+- A list of the initial and final position(s) at which subs occurs in s, if any.
+- An empty list, in any other cases.
+"""
+# Tokenization
+pattern = re.sub("[^\w]", " ",  subs).split()
+seq = re.sub("[^\w]", " ",  s).split()
+
+return find_sub_list(pattern, seq)
