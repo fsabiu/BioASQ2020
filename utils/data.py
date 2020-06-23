@@ -44,7 +44,7 @@ def load_data(csv_file, questionType, singleSnippets = False):
         for snippet in question["snippets"]:
           if question["type"] == questionType:
             try:
-              append([question["body"], question["exact_answer"], question["ideal_answer"], snippet])
+              append({"body":question["body"], "exact_answer":question["exact_answer"], "ideal_answer": question["ideal_answer"], "snippet": snippet})
             except:
               print("Missing fields")
     
@@ -214,25 +214,25 @@ def find_sub_list(sl,l):
   - A list of all the initial and final indices (tuples) of l at which sl starts and ends, if any.
   - Else, empty list
   """
-    results=[]
-    sll=len(sl)
-    for ind in (i for i,e in enumerate(l) if e==sl[0]):
-        if (l[ind:ind+sll]==sl and ind>l.index('[SEP]')):
-            results.append((ind,ind+sll-1))
-    return results
+  results=[]
+  sll=len(sl)
+  for ind in (i for i,e in enumerate(l) if e==sl[0]):
+      if (l[ind:ind+sll]==sl and ind>l.index('[SEP]')):
+          results.append((ind,ind+sll-1))
+  return results
 
 def getsubIndices(subs, s):
-"""
-Parameters:
-- s: a string
-- subs: the pattern to be identified in s
+  """
+  Parameters:
+  - s: a string
+  - subs: the pattern to be identified in s
 
-Returns:
-- A list of the initial and final position(s) at which subs occurs in s, if any.
-- An empty list, in any other cases.
-"""
-# Tokenization
-pattern = re.sub("[^\w]", " ",  subs).split()
-seq = re.sub("[^\w]", " ",  s).split()
+  Returns:
+  - A list of the initial and final position(s) at which subs occurs in s, if any.
+  - An empty list, in any other cases.
+  """
+  # Tokenization
+  pattern = re.sub("[^\w]", " ",  subs).split()
+  seq = re.sub("[^\w]", " ",  s).split()
 
-return find_sub_list(pattern, seq)
+  return find_sub_list(pattern, seq)
