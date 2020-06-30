@@ -2,3 +2,8 @@
 venv
 utils/__pycache__
 utils/notebooks/logs
+transformers_models/*
+embedding_files/*
+
+!transformers_models/.gitkeep 
+!embedding_files/.gitkeep 
