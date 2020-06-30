@@ -1,4 +1,5 @@
 import json
+import re
 from flair.data import Sentence
 import progressbar
 import pickle
@@ -15,11 +16,12 @@ def load_data_list(csv_file):
               for question in training["questions"] if question["type"] == "list"]
     return output
 
-def load_data(csv_file, questionType):
+def load_data(csv_file, questionType, singleSnippets = False):
     """
     Parameters:
     - csv_file: JSON input file
     - questionType: type of the questions to be retrieved
+    - singleSnippets: boolean value specifying whether <question, snippet> pairs must be returned
 
     Return:
     - list of <body, exact answer, ideal answer, snippet list> for each question of the questionType type.
@@ -30,8 +32,22 @@ def load_data(csv_file, questionType):
     # Opening training set
     with open(csv_file, "r") as read_file:
         training = json.load(read_file)
-    output = [[question["body"], question["exact_answer"], question["ideal_answer"], [snippet["text"] for snippet in question["snippets"]]]
-              for question in training["questions"] if question["type"] == questionType]
+
+    output = []
+    append = output.append
+    
+    if(singleSnippets == False):
+      output = [[question["body"], question["exact_answer"], question["ideal_answer"], [snippet["text"] for snippet in question["snippets"]]]
+                for question in training["questions"] if question["type"] == questionType]
+    else:
+      for question in training["questions"]:
+        for snippet in question["snippets"]:
+          if question["type"] == questionType:
+            try:
+              append({"body":question["body"], "exact_answer":question["exact_answer"], "ideal_answer": question["ideal_answer"], "snippet": snippet})
+            except:
+              print("Missing fields")
+    
     return output
 
 def clean_synonyms(list_question):
@@ -187,3 +203,36 @@ def data_split(X, y, y_size):
   Returns X_train,X_test,y_train,y_test depending on the split ratio y_size
   """
   return train_test_split(X,y,test_size=y_size)
+
+def find_sub_list(sl,l):
+  """
+  Parameters:
+  - sl is a list of strings (words)
+  - l is a list of strings following the pattern a::['SEP']::b with a and b ebentually being empty.
+
+  Returns:
+  - A list of all the initial and final indices (tuples) of l at which sl starts and ends, if any.
+  - Else, empty list
+  """
+  results=[]
+  sll=len(sl)
+  for ind in (i for i,e in enumerate(l) if e==sl[0]):
+      if (l[ind:ind+sll]==sl and ind>l.index('[SEP]')):
+          results.append((ind,ind+sll-1))
+  return results
+
+def getsubIndices(subs, s):
+  """
+  Parameters:
+  - s: a string
+  - subs: the pattern to be identified in s
+
+  Returns:
+  - A list of the initial and final position(s) at which subs occurs in s, if any.
+  - An empty list, in any other cases.
+  """
+  # Tokenization
+  pattern = re.sub("[^\w]", " ",  subs).split()
+  seq = re.sub("[^\w]", " ",  s).split()
+
+  return find_sub_list(pattern, seq)
