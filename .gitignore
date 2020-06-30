@@ -1,0 +1,5 @@
+transformers_models/*
+embedding_files/*
+
+!transformers_models/.gitkeep 
+!embedding_files/.gitkeep 
