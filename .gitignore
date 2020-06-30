@@ -1,0 +1,4 @@
+.vscode
+venv
+utils/__pycache__
+utils/notebooks/logs
