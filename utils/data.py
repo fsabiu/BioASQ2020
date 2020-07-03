@@ -1,5 +1,6 @@
 import json
 import re
+import random
 from flair.data import Sentence
 import progressbar
 import pickle
@@ -236,3 +237,41 @@ def getsubIndices(subs, s):
   seq = re.sub("[^\w]", " ",  s).split()
 
   return find_sub_list(pattern, seq)
+
+
+def yesNoAugmentation(target, n_questions, singleSnippets):
+  """
+  Parameters:
+  - target: the target of the required questions
+  - n_questions: the number of required questions
+  - singleSnippets: boolean value specifying whether <question, snippet> pairs must be returned
+
+  NOTICE that the parameter n_questions specifies the number of questions, independently from the number of snippets
+  (important if single snippets are required) 
+
+  Returns:
+  - A list of "n_questions" <body, exact answer, ideal answer, snippet list>, randomly selected among those having the specified target.
+  """
+  fifth = load_data("../../data/training5b.json", "yesno", singleSnippets)
+  sixth = load_data("../../data/training6b.json", "yesno", singleSnippets)
+  seventh = load_data("../../data/training7b.json", "yesno", singleSnippets)
+
+  # Filter records with target = target (yes/no)
+  questions = [q for q in fifth + sixth + seventh if q["exact_answer"] == target]
+
+  # Total number of questions
+  total = len(questions)
+
+  # Checking available questions number
+  if (n_questions > total):
+    raise Exception("Not enough questions in the three previous datasets: required " + str(n_questions) + " of " + str(total))
+  
+  # Sampling n_questions different questions
+  questions_indices = random.sample(range(0, total-1), n_questions)
+
+  result = []
+
+  for(idx in questions_indices):
+    result.append(questions[idx])
+
+  return result
