@@ -32,23 +32,28 @@ def load_data(csv_file, questionType, singleSnippets = False):
     
     # Opening training set
     with open(csv_file, "r") as read_file:
-        training = json.load(read_file)
+        training = json.load(read_file, encoding='utf-8')
 
     output = []
     append = output.append
     
     if(singleSnippets == False):
-      output = [[question["body"], question["exact_answer"], question["ideal_answer"], [snippet["text"] for snippet in question["snippets"]]]
-                for question in training["questions"] if question["type"] == questionType]
+      try:
+        output = [[question["body"], question["exact_answer"], question["ideal_answer"], [snippet["text"] for snippet in question["snippets"]]]
+                  for question in training["questions"] if question["type"] == questionType]
+      except:
+          pass
     else:
       for question in training["questions"]:
-        for snippet in question["snippets"]:
-          if question["type"] == questionType:
-            try:
-              append({"body":question["body"], "exact_answer":question["exact_answer"], "ideal_answer": question["ideal_answer"], "snippet": snippet})
-            except:
-              print("Missing fields")
-    
+        try:
+          for snippet in question["snippets"]:
+            if question["type"] == questionType:
+              try:
+                append({"body":question["body"], "exact_answer":question["exact_answer"], "ideal_answer": question["ideal_answer"], "snippet": snippet})
+              except:
+                print("Missing fields")
+        except:
+          pass
     return output
 
 def clean_synonyms(list_question):
@@ -252,12 +257,12 @@ def yesNoAugmentation(target, n_questions, singleSnippets):
   Returns:
   - A list of "n_questions" <body, exact answer, ideal answer, snippet list>, randomly selected among those having the specified target.
   """
-  fifth = load_data("../../data/training5b.json", "yesno", singleSnippets)
+  #fifth = load_data("../../data/training5b.json", "yesno", singleSnippets)
   sixth = load_data("../../data/training6b.json", "yesno", singleSnippets)
   seventh = load_data("../../data/training7b.json", "yesno", singleSnippets)
 
   # Filter records with target = target (yes/no)
-  questions = [q for q in fifth + sixth + seventh if q["exact_answer"] == target]
+  questions = [q for q in sixth + seventh if q["exact_answer"] == target]
 
   # Total number of questions
   total = len(questions)
@@ -266,12 +271,15 @@ def yesNoAugmentation(target, n_questions, singleSnippets):
   if (n_questions > total):
     raise Exception("Not enough questions in the three previous datasets: required " + str(n_questions) + " of " + str(total))
   
-  # Sampling n_questions different questions
-  questions_indices = random.sample(range(0, total-1), n_questions)
+  # Sampling n_questions different questions (or not)
+  if (n_questions == -1):
+    questions_indices = range(len(questions))
+  else:
+    questions_indices = random.sample(range(0, total-1), n_questions)
 
   result = []
 
-  for(idx in questions_indices):
+  for idx in questions_indices:
     result.append(questions[idx])
 
   return result
