@@ -262,7 +262,12 @@ def yesNoAugmentation(target, n_questions, singleSnippets):
   seventh = load_data("../../data/training7b.json", "yesno", singleSnippets)
 
   # Filter records with target = target (yes/no)
-  questions = [q for q in fifth + sixth + seventh if q["exact_answer"] == target]
+  
+  questions = []
+  if(singleSnippets):
+    questions = [q for q in fifth + sixth + seventh if q["exact_answer"] == target]
+  else:
+    questions = [q for q in fifth + sixth + seventh if q[1] == target]
 
   # Total number of questions
   total = len(questions)
