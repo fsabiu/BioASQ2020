@@ -11,7 +11,7 @@ def load_data_list(csv_file):
     # file di input per il json
     # tipo di domande da recuperare
 
-    with open(csv_file, "r") as read_file:
+    with open(csv_file, "r", errors = 'ignore') as read_file: # After analysing errors we decided to ignore them
         training = json.load(read_file)
     output = [[question["body"], question["exact_answer"], [snippet["text"] for snippet in question["snippets"]]]
               for question in training["questions"] if question["type"] == "list"]
@@ -31,7 +31,7 @@ def load_data(csv_file, questionType, singleSnippets = False):
       raise Exception("Unknown question type: " + questionType)
     
     # Opening training set
-    with open(csv_file, "r") as read_file:
+    with open(csv_file, "r", errors = 'ignore') as read_file:
         training = json.load(read_file, encoding='utf-8')
 
     output = []
@@ -257,12 +257,12 @@ def yesNoAugmentation(target, n_questions, singleSnippets):
   Returns:
   - A list of "n_questions" <body, exact answer, ideal answer, snippet list>, randomly selected among those having the specified target.
   """
-  #fifth = load_data("../../data/training5b.json", "yesno", singleSnippets)
+  fifth = load_data("../../data/training5b.json", "yesno", singleSnippets)
   sixth = load_data("../../data/training6b.json", "yesno", singleSnippets)
   seventh = load_data("../../data/training7b.json", "yesno", singleSnippets)
 
   # Filter records with target = target (yes/no)
-  questions = [q for q in sixth + seventh if q["exact_answer"] == target]
+  questions = [q for q in fifth + sixth + seventh if q["exact_answer"] == target]
 
   # Total number of questions
   total = len(questions)
