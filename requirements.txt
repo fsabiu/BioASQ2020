@@ -1,6 +1,7 @@
 beautifulsoup4
 flair
 keras
+nltk
 num2words
 numpy
 pandas

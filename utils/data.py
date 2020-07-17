@@ -1,10 +1,13 @@
 import json
 import re
+import string
 import random
 from flair.data import Sentence
 import progressbar
 import pickle
 from sklearn.model_selection import train_test_split
+import nltk
+from nltk.corpus import stopwords
 
 ############################################################LIST
 def load_data_list(csv_file):
@@ -288,3 +291,24 @@ def yesNoAugmentation(target, n_questions, singleSnippets):
     result.append(questions[idx])
 
   return result
+
+def preProcess(phrases):
+  # Stopwords
+  nltk.download('stopwords') # To be optimized
+  stopWords = set(stopwords.words('english'))
+
+  def removePunctuation(x):
+    x = x.lower()
+    x = re.sub(r'[^\x00-\x7f]',r' ',x)
+    return re.sub("["+string.punctuation+"]", " ", x)
+    
+  def removeStopwords(x, stopWords):
+      filtered_words = [word for word in x.split() if word not in stopWords]
+      return " ".join(filtered_words)
+
+  phrases = [removePunctuation(phrase) for phrase in phrases]
+  phrases = [removeStopwords(phrase, stopWords) for phrase in phrases]
+  phrases = [phrase.lower() for phrase in phrases]
+
+  return phrases
+
