@@ -14,7 +14,7 @@ def load_data_list(csv_file):
     # file di input per il json
     # tipo di domande da recuperare
 
-    with open(csv_file, "r", errors = 'ignore') as read_file: # After analysing errors we decided to ignore them
+    with open(csv_file, "r", errors = 'ignore') as read_file:
         training = json.load(read_file)
     output = [[question["body"], question["exact_answer"], [snippet["text"] for snippet in question["snippets"]]]
               for question in training["questions"] if question["type"] == "list"]
@@ -34,7 +34,7 @@ def load_data(csv_file, questionType, singleSnippets = False):
       raise Exception("Unknown question type: " + questionType)
     
     # Opening training set
-    with open(csv_file, "r", errors = 'ignore') as read_file:
+    with open(csv_file, "r", errors = 'ignore') as read_file:  # After analysing errors we decided to ignore them
         training = json.load(read_file, encoding='utf-8')
 
     output = []
@@ -42,7 +42,11 @@ def load_data(csv_file, questionType, singleSnippets = False):
     
     if(singleSnippets == False):
       try:
+        """
         output = [[question["body"], question["exact_answer"], question["ideal_answer"], [snippet["text"] for snippet in question["snippets"]]]
+                  for question in training["questions"] if question["type"] == questionType]
+                  """
+        output = [[question["body"], question["exact_answer"], [snippet["text"] for snippet in question["snippets"]]]
                   for question in training["questions"] if question["type"] == questionType]
       except:
           pass
@@ -52,7 +56,8 @@ def load_data(csv_file, questionType, singleSnippets = False):
           for snippet in question["snippets"]:
             if question["type"] == questionType:
               try:
-                append({"body":question["body"], "exact_answer":question["exact_answer"], "ideal_answer": question["ideal_answer"], "snippet": snippet})
+                #append({"body":question["body"], "exact_answer":question["exact_answer"], "ideal_answer": question["ideal_answer"], "snippet": snippet})
+                append([question["body"], question["exact_answer"], snippet["text"]])
               except:
                 print("Missing fields")
         except:
@@ -267,10 +272,7 @@ def yesNoAugmentation(target, n_questions, singleSnippets):
   # Filter records with target = target (yes/no)
   
   questions = []
-  if(singleSnippets):
-    questions = [q for q in fifth + sixth + seventh if q["exact_answer"] == target]
-  else:
-    questions = [q for q in fifth + sixth + seventh if q[1] == target]
+  questions = [q for q in fifth + sixth + seventh if q[1] == target]
 
   # Total number of questions
   total = len(questions)
