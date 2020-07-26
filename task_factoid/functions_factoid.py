@@ -1,5 +1,3 @@
-from utils.evaluate import evaluate_factoid
-from utils.data import load_data
 import sys
 import torch
 import os
@@ -10,7 +8,8 @@ from tensorflow.keras import layers
 from tokenizers import BertWordPieceTokenizer
 from transformers import BertTokenizer, TFBertModel, BertConfig, BertForQuestionAnswering, BertModel, BertForPreTraining
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+from utils.data import load_data
+from utils.evaluate import evaluate_factoid
 
 def model_creation(max_len, encoder):
     print("...Model creation")
@@ -41,6 +40,9 @@ def model_creation(max_len, encoder):
 
 
 def encode_daset(dataset_path, max_len, tokenizer, test_execution=False):
+    ##########################
+    # Gli snippet he sono più lunghi di maxlen vengono scartati
+    #########################
 
     print("...Encode dataset")
     if(test_execution):
@@ -61,24 +63,26 @@ def encode_daset(dataset_path, max_len, tokenizer, test_execution=False):
         answer_list.append(sample[1])
         encoding = tokenizer.encode_plus(sample[0], sample[2])
         input_ids, token_type_ids = encoding["input_ids"], encoding["token_type_ids"]
-        attention_mask = [1] * len(input_ids)
 
-        # Padding
-        padding_length = max_len - len(input_ids)
-        if padding_length > 0:  #
-            input_ids = input_ids + ([0] * padding_length)
-            attention_mask = attention_mask + ([0] * padding_length)
-            token_type_ids = token_type_ids + ([0] * padding_length)
+        if(len(input_ids) < max_len):
+            attention_mask = [1] * len(input_ids)
 
-        # Aggiunta manuale start token end token
-        # TODO: Aggiungere la ricerca automatica nello snippet
-        start_aswer_list.append(4)
-        end_answer_list.append(5)
+            # Padding
+            padding_length = max_len - len(input_ids)
+            if padding_length > 0:  #
+                input_ids = input_ids + ([0] * padding_length)
+                attention_mask = attention_mask + ([0] * padding_length)
+                token_type_ids = token_type_ids + ([0] * padding_length)
 
-        # Altre info
-        input_ids_list.append(input_ids)
-        token_type_ids_list.append(token_type_ids)
-        attention_mask_list.append(attention_mask)
+            # Aggiunta manuale start token end token
+            # TODO: Aggiungere la ricerca automatica nello snippet se non è presente non inserire la coppia domanda snippet
+            start_aswer_list.append(4)
+            end_answer_list.append(5)
+
+            # Altre info
+            input_ids_list.append(input_ids)
+            token_type_ids_list.append(token_type_ids)
+            attention_mask_list.append(attention_mask)
 
     input_ids_list = np.array(input_ids_list)
     token_type_ids_list = np.array(token_type_ids_list)
@@ -86,20 +90,25 @@ def encode_daset(dataset_path, max_len, tokenizer, test_execution=False):
     start_aswer_list = np.array(start_aswer_list)
     end_answer_list = np.array(end_answer_list)
 
-    # TODO:eliminare indici
-    x_data = [input_ids_list[0:3],
-              token_type_ids_list[0:3], attention_mask_list[0:3]]
-    y_data = [start_aswer_list[0:3], end_answer_list[0:3]]
-    answer_list = answer_list[0:3]
+    if(test_execution):
+        x_data = [input_ids_list[0:2],
+                  token_type_ids_list[0:2], attention_mask_list[0:2]]
+        y_data = [start_aswer_list[0:2], end_answer_list[0:2]]
+        answer_list = answer_list[0:2]
+    else:
+        x_data = [input_ids_list, token_type_ids_list, attention_mask_list]
+        y_data = [start_aswer_list, end_answer_list]
+        answer_list = answer_list
     return x_data, y_data, answer_list
 
 
-def run_factoid_training(model, x_data, y_data, epochs):
+def run_factoid_training(model, x_data, y_data, x_data_val, y_data_val, epochs, batch_size):
     print("...Training")
-    # TODO:Aggiungere gestione validazione
     model.fit(
         x_data,
         y_data,
+        batch_size=batch_size,
+        validation_data=(x_data_val, y_data_val),
         epochs=epochs,
         verbose=1,
     )
@@ -107,7 +116,6 @@ def run_factoid_training(model, x_data, y_data, epochs):
 
 
 def extract_answer(start_scores, end_scores, all_tokens):
-    # TODO: eliminare il token di padding
     answer_start = tf.argmax(start_scores)
     answer_end = tf.argmax(end_scores)
     answer = all_tokens[answer_start]
@@ -121,7 +129,9 @@ def extract_answer(start_scores, end_scores, all_tokens):
 
         # Otherwise, add a space then the token.
         else:
-            answer += ' ' + all_tokens[i]
+            # Non dovrebbe servire eliminarli una volta che il modello è allenato bene, ma per questione di pulizia si eliminano anche questi token extra
+            if(all_tokens[i] != "[PAD]" and all_tokens[i] != "[SEP]"):
+                answer += ' ' + all_tokens[i]
 
     # TODO:Gestire generazione 5 risposte
     return [answer, answer, answer, answer, answer]
@@ -139,6 +149,7 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
 
         # Print risposta raw
         #answer = ' '.join(all_tokens[tf.argmax(start_scores[i]) : tf.argmax(end_scores[i])+1])
+        # print(answer)
 
         answers = extract_answer(start_scores[i], end_scores[i], all_tokens)
         predicted.append(answers)
