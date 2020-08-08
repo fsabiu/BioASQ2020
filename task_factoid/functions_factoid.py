@@ -8,7 +8,7 @@ from tensorflow.keras import layers
 from tokenizers import BertWordPieceTokenizer
 from transformers import BertTokenizer, TFBertModel, BertConfig, BertForQuestionAnswering, BertModel, BertForPreTraining
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.data import load_data
+from utils.data import load_data, find_sub_list
 from utils.evaluate import evaluate_factoid
 
 def model_creation(max_len, encoder):
@@ -47,7 +47,7 @@ def encode_daset(dataset_path, max_len, tokenizer, test_execution=False):
     print("...Encode dataset")
     if(test_execution):
         dataset_processed = load_data(
-            dataset_path, "factoid", singleSnippets=True)[0:2]
+            dataset_path, "factoid", singleSnippets=True)[0:5]
     else:
         dataset_processed = load_data(
             dataset_path, "factoid", singleSnippets=True)
@@ -60,29 +60,41 @@ def encode_daset(dataset_path, max_len, tokenizer, test_execution=False):
     answer_list = []
 
     for sample in dataset_processed:
-        answer_list.append(sample[1])
+       
+        #sample[0] domanda
+        #sample[1] risposta
+        #sample[2] snippet
+
+        # Encoding della domanda e dello snippet
         encoding = tokenizer.encode_plus(sample[0], sample[2])
         input_ids, token_type_ids = encoding["input_ids"], encoding["token_type_ids"]
-
+        
         if(len(input_ids) < max_len):
             attention_mask = [1] * len(input_ids)
 
-            # Padding
             padding_length = max_len - len(input_ids)
             if padding_length > 0:  #
                 input_ids = input_ids + ([0] * padding_length)
                 attention_mask = attention_mask + ([0] * padding_length)
                 token_type_ids = token_type_ids + ([0] * padding_length)
 
-            # Aggiunta manuale start token end token
-            # TODO: Aggiungere la ricerca automatica nello snippet se non è presente non inserire la coppia domanda snippet
-            start_aswer_list.append(4)
-            end_answer_list.append(5)
+            # Domanda e snippet
+            all_tokens = tokenizer.convert_ids_to_tokens(input_ids)
+            # Risposta
+            answer_token=tokenizer.encode(sample[1][0])
+            answer_encoding = tokenizer.convert_ids_to_tokens(answer_token)
+            
+            start,end=find_sub_list(all_tokens,answer_encoding)
 
-            # Altre info
-            input_ids_list.append(input_ids)
-            token_type_ids_list.append(token_type_ids)
-            attention_mask_list.append(attention_mask)
+            if(start!=-1):
+                answer_list.append(sample[1])
+                start_aswer_list.append(start)
+                end_answer_list.append(end)
+
+                # Altre info
+                input_ids_list.append(input_ids)
+                token_type_ids_list.append(token_type_ids)
+                attention_mask_list.append(attention_mask)
 
     input_ids_list = np.array(input_ids_list)
     token_type_ids_list = np.array(token_type_ids_list)
@@ -91,10 +103,10 @@ def encode_daset(dataset_path, max_len, tokenizer, test_execution=False):
     end_answer_list = np.array(end_answer_list)
 
     if(test_execution):
-        x_data = [input_ids_list[0:2],
-                  token_type_ids_list[0:2], attention_mask_list[0:2]]
-        y_data = [start_aswer_list[0:2], end_answer_list[0:2]]
-        answer_list = answer_list[0:2]
+        x_data = [input_ids_list[0:5],
+                  token_type_ids_list[0:5], attention_mask_list[0:5]]
+        y_data = [start_aswer_list[0:5], end_answer_list[0:5]]
+        answer_list = answer_list[0:5]
     else:
         x_data = [input_ids_list, token_type_ids_list, attention_mask_list]
         y_data = [start_aswer_list, end_answer_list]
@@ -138,6 +150,7 @@ def extract_answer(start_scores, end_scores, all_tokens):
 
 
 def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
+    #TODO:accorpare rissposte alle domande divise in singoli snippets per effettuare una migliore valutazione.
 
     print("...Evaluate")
 
