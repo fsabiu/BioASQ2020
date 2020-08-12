@@ -236,6 +236,7 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
         predicted.append((answer_extract, last_elem_count))
 
     predicted = merge_answer(predicted)
-    print(predicted)
+    predicted_cleaned=[[elem for elem,score in question] for question in pred]
+    print(predicted_cleaned)
     print(merge_answer_list)
     print(evaluate_factoid(predicted=predicted, target=merge_answer_list))
