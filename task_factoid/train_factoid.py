@@ -17,7 +17,7 @@ max_len = 512
 batch_size = 10
 epochs = 20
 learning_rate=0.00001
-test_execution = 100
+test_execution = 7
 
 ###########################################################
 # Pretrained model
@@ -29,9 +29,9 @@ x_data, y_data, answer_list = encode_dataset(
 x_data_test = x_data  # TODO:aggiungere splittaggio test
 
 # Training
-trained_model = run_factoid_training(
-    model, x_data, y_data, epochs, batch_size)
+#trained_model = run_factoid_training(
+#    model, x_data, y_data, epochs, batch_size)
 
 # Evaluate
-test_factoid_model(trained_model=trained_model, tokenizer=tokenizer,
+test_factoid_model(trained_model=model, tokenizer=tokenizer,
                    x_data_test=x_data_test, answer_list=answer_list)

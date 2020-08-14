@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.evaluate import evaluate_factoid
 from utils.data import load_data, find_sub_list
-
+import time
 import torch
 import math
 from queue import PriorityQueue
@@ -135,11 +135,52 @@ def run_factoid_training(model, x_data, y_data, epochs, batch_size):
     )
     return model
 
+def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
+    print("...Evaluate")
 
-def extract_answer(start_scores, end_scores, all_tokens):
+    predicted = []
+    start_scores, end_scores = trained_model(x_data_test)
+    last_elem = ""
+    last_elem_count = 0
+    merge_answer_list = []
+
+    for i in range(len(x_data_test[0])):
+        all_tokens = tokenizer.convert_ids_to_tokens(x_data_test[0][i])
+
+        if(answer_list[i]!=last_elem):
+            last_elem_count += 1
+            last_elem=answer_list[i]
+            merge_answer_list.append(answer_list[i])
+
+        # Print risposta raw
+        #answer = ' '.join(all_tokens[tf.argmax(start_scores[i]) : tf.argmax(end_scores[i])+1])
+        # print(answer)
+
+        answer_extract = extract_answer(
+            start_scores[i], end_scores[i], all_tokens,x_data_test[1][i])
+
+        predicted.append((answer_extract, last_elem_count))
+
+
+    predicted = merge_answer(predicted)
+
+    predicted_cleaned=[[elem for elem,score in question] for question in predicted]
+
+    print(predicted_cleaned)
+    print(merge_answer_list)
+    print(evaluate_factoid(predicted=predicted, target=merge_answer_list))
+
+def extract_answer(start_scores, end_scores, all_tokens,token_type_ids):
     # Estrazione delle 5 risposte più probabili
-    # TODO: gestire il numero di combinazioni, con troppe le combinazioni sono troppe, inserire un threashold
-    results_array = KMaxCombinations(start_scores, end_scores, 5)
+    ##########
+    print("start combination")
+    start=time.time()
+    ########
+    results_array = KMaxCombinations(start_scores, end_scores, 5,token_type_ids)
+    ##########
+    end=time.time()
+    print("Get top 5 compination:",end-start)
+    #########
     final_answers = []
 
     for elem in results_array:
@@ -162,19 +203,20 @@ def extract_answer(start_scores, end_scores, all_tokens):
     return final_answers
 
 
-def KMaxCombinations(arr1, arr2, K):
+def KMaxCombinations(start, end, K, token_type_ids):
     # Somma le combinaziooni di end e start per ottenere inizio e fine più probabili
     # Vedi test_list model per i dettagli
 
-    dim = len(arr1)
+    dim = len(start)
     pq = PriorityQueue()
 
     # insert all the possible
     # combinations in max heap.
     for i in range(0, dim):
         for j in range(0, dim):
-            a = arr1[i] + arr2[j]
-            pq.put((-a, a, i, j))
+            if(i<=j and token_type_ids[i]==1 and token_type_ids[j]==1):
+                a = start[i] + end[j]
+                pq.put((-a, a, i, j))
 
     # pop first N elements
     counter = 0
@@ -182,9 +224,8 @@ def KMaxCombinations(arr1, arr2, K):
     while (counter < K):
         elem = pq.get()
         # SI inseriscono solo le ripsoste in cui l'indice di inizio inizio è precedente all'indice di fine
-        if(elem[2] < elem[3]):
-            results_array.append((elem[1], elem[2], elem[3]))
-            counter = counter + 1
+        results_array.append((elem[1], elem[2], elem[3]))
+        counter = counter + 1
     # Vengono restituite lo score, lo start e l'end
     return results_array
 
@@ -204,39 +245,4 @@ def merge_answer(predicted):
     return final_predicted
 
 
-def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
-    print("...Evaluate")
 
-    predicted = []
-    start_scores, end_scores = trained_model(x_data_test)
-    last_elem = ""
-    last_elem_count = 0
-    merge_answer_list = []
-
-    for i in range(len(x_data_test[0])):
-
-        all_tokens = tokenizer.convert_ids_to_tokens(x_data_test[0][i])
-        
-        #if(not np.array_equal(x_data_test[0][i],last_elem)):
-        #    last_elem_count += 1
-        #    last_elem = x_data_test[0][i]
-        #    merge_answer_list.append(answer_list[i])
-        if(answer_list[i]!=last_elem):
-            last_elem_count += 1
-            last_elem=answer_list[i]
-            merge_answer_list.append(answer_list[i])
-
-        # Print risposta raw
-        #answer = ' '.join(all_tokens[tf.argmax(start_scores[i]) : tf.argmax(end_scores[i])+1])
-        # print(answer)
-
-        answer_extract = extract_answer(
-            start_scores[i], end_scores[i], all_tokens)
-
-        predicted.append((answer_extract, last_elem_count))
-
-    predicted = merge_answer(predicted)
-    predicted_cleaned=[[elem for elem,score in question] for question in pred]
-    print(predicted_cleaned)
-    print(merge_answer_list)
-    print(evaluate_factoid(predicted=predicted, target=merge_answer_list))
