@@ -5,6 +5,7 @@ from utils.evaluate import evaluate_factoid
 from utils.data import load_data, find_sub_list
 import time
 import torch
+from datetime import datetime
 import math
 from queue import PriorityQueue
 from itertools import groupby
@@ -120,10 +121,12 @@ def encode_dataset(dataset_path, max_len, tokenizer, test_execution=-1):
 
     return x_data, y_data, answer_list
 
-
-def run_factoid_training(model, x_data, y_data, epochs, batch_size):
+def run_factoid_training(model, x_data, y_data, epochs, batch_size,logdir):
     #La validazione è fatta in automatico con validation split
     print("...Training")
+
+    tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir,profile_batch=0)
+
     model.fit(
         x_data,
         y_data,
@@ -131,7 +134,8 @@ def run_factoid_training(model, x_data, y_data, epochs, batch_size):
         validation_data=(x_data, y_data),#mettere validation split quando si fa un allenamento completo
         epochs=epochs,
         verbose=1,
-        use_multiprocessing=True
+        use_multiprocessing=True,
+        callbacks=[tensorboard_callback]
     )
     return model
 
@@ -168,7 +172,9 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
 
     print(predicted_cleaned)
     print(merge_answer_list)
-    print(evaluate_factoid(predicted=predicted, target=merge_answer_list))
+    evaluation=evaluate_factoid(predicted=predicted, target=merge_answer_list)
+    print(evaluation)
+    return evaluation
 
 def extract_answer(start_scores, end_scores, all_tokens,token_type_ids):
     # Estrazione delle 5 risposte più probabili
