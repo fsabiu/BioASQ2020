@@ -7,7 +7,7 @@ from transformers import BertTokenizer, TFBertModel
 from tensorboard.plugins.hparams import api as hp
 from functions_factoid import *
 
-def execute_factoid(date,logdir,dataset_path,tokenizer,encoder,max_len,batch_size,epochs,learning_rate,test_execution=-1):
+def execute_factoid(date,logdir,dataset_path,tokenizer,encoder,max_len,batch_size,epochs,learning_rate,test_execution=-1,save=False):
 
     # Pretrained model
     model = model_creation(max_len, learning_rate, encoder)
@@ -24,6 +24,9 @@ def execute_factoid(date,logdir,dataset_path,tokenizer,encoder,max_len,batch_siz
     # Evaluate
     evaluation=test_factoid_model(trained_model=trained_model, tokenizer=tokenizer,
                     x_data_test=x_data_test, answer_list=answer_list)
+    
+    if(save==True):
+        trained_model.save_weights(logdir+"model.h5",save_format='h5')
 
     #Setup tensorboard
 
@@ -73,4 +76,4 @@ test_execution = 7
 
 ###########################################################
 
-#execute_factoid(date,logdir,dataset_path,tokenizer,encoder,max_len,batch_size,epochs,learning_rate,test_execution)
+execute_factoid(date,logdir,dataset_path,tokenizer,encoder,max_len,batch_size,epochs,learning_rate,test_execution)

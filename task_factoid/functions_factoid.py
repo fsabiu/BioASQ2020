@@ -172,7 +172,7 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
 
     print(predicted_cleaned)
     print(merge_answer_list)
-    evaluation=evaluate_factoid(predicted=predicted, target=merge_answer_list)
+    evaluation=evaluate_factoid(predicted=predicted_cleaned, target=merge_answer_list)
     print(evaluation)
     return evaluation
 
@@ -208,7 +208,6 @@ def extract_answer(start_scores, end_scores, all_tokens,token_type_ids):
         final_answers.append((answer, float(elem[0])))
     return final_answers
 
-
 def KMaxCombinations(start, end, K, token_type_ids):
     # Somma le combinaziooni di end e start per ottenere inizio e fine più probabili
     # Vedi test_list model per i dettagli
@@ -234,7 +233,6 @@ def KMaxCombinations(start, end, K, token_type_ids):
         counter = counter + 1
     # Vengono restituite lo score, lo start e l'end
     return results_array
-
 
 def merge_answer(predicted):
     # Fa il merge delle risposte per la singola domanda, e restituisce le migliori 5

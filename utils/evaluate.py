@@ -15,6 +15,11 @@ def evaluate_yes_no(predicted, target):
 
 
 def evaluate_factoid(predicted, target):
+
+    #Pre-processing
+    target=[elem.lower() for elem in target]
+    predicted=[ [elem.lower() for elem in question] for question in predicted]
+    #Compute measures
     c_1 = 0
     c_5 = 0
     rank_sum = 0
