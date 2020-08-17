@@ -219,7 +219,12 @@ def data_split(X, y, y_size):
   return train_test_split(X,y,test_size=y_size)
 
 def find_sub_list(mylist, pattern):
+    #Preprocessing
     pattern=pattern[1:len(pattern)-1]
+    pattern=[elem.lower() for elem in pattern]
+    mylist=[elem.lower() for elem in mylist]
+
+    #Search
     matches = []
     start=-1
     end=-1

@@ -131,7 +131,8 @@ def run_factoid_training(model, x_data, y_data, epochs, batch_size,logdir):
         x_data,
         y_data,
         batch_size=batch_size,
-        validation_data=(x_data, y_data),#mettere validation split quando si fa un allenamento completo
+        #validation_data=(x_data, y_data),
+        validation_split=0.15,#mettere validation split quando si fa un allenamento completo
         epochs=epochs,
         verbose=1,
         use_multiprocessing=True,
