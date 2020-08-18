@@ -74,7 +74,7 @@ encoder = TFBertModel.from_pretrained(
     "./transformers_models/biobert_factoid_pytorch", from_pt=True)
 
 max_len = 512
-batch_size = 10
+batch_size = 5
 epochs = 2
 learning_rate = 0.00001
 #test_execution = 20
