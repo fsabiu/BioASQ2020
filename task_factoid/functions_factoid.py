@@ -148,7 +148,7 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
     #start_scores, end_scores = trained_model(x_data_test)
     start_scores=[]
     end_scores=[]
-    for i in range(0,len(x_data_test)):
+    for i in range(len(x_data_test)):
         start_scores_local,end_scores_local=trained_model([np.array([x_data_test[0][i]]),np.array([x_data_test[1][i]]),np.array([x_data_test[2][i]])])
         start_scores.append(start_scores_local[0])
         end_scores.append(end_scores_local[0])
@@ -174,7 +174,7 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
         # print(answer)
 
         answer_extract = extract_answer(
-            start_scores[i], end_scores[i], all_tokens,x_data_test[1][i])
+            start_scores[i], end_scores[i], all_tokens, x_data_test[1][i])
 
         predicted.append((answer_extract, last_elem_count))
 
@@ -183,8 +183,8 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
 
     predicted_cleaned=[[elem for elem,score in question] for question in predicted]
 
-    print(predicted_cleaned)
-    print(merge_answer_list)
+    #print(predicted_cleaned)
+    #print(merge_answer_list)
     evaluation=evaluate_factoid(predicted=predicted_cleaned, target=merge_answer_list)
     print(evaluation)
     return evaluation
@@ -195,10 +195,10 @@ def extract_answer(start_scores, end_scores, all_tokens,token_type_ids):
     print("start combination")
     start=time.time()
     ########
-    results_array = KMaxCombinations(start_scores, end_scores, 5,token_type_ids)
+    results_array = KMaxCombinations(start_scores, end_scores, 5, token_type_ids)
     ##########
     end=time.time()
-    print("Get top 5 compination:",end-start)
+    print("Get top 5 combination:",end-start)
     #########
     final_answers = []
 
@@ -219,6 +219,7 @@ def extract_answer(start_scores, end_scores, all_tokens,token_type_ids):
                 if(all_tokens[i] != "[PAD]" and all_tokens[i] != "[SEP]"):
                     answer += ' ' + all_tokens[i]
         final_answers.append((answer, float(elem[0])))
+    print("Final-Answer")
     return final_answers
 
 def KMaxCombinations(start, end, K, token_type_ids):
