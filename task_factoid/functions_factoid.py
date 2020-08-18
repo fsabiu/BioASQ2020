@@ -176,7 +176,7 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
             start_scores[i], end_scores[i], all_tokens, x_data_test[1][i])
 
         predicted.append((answer_extract, last_elem_count))
-
+        print("Sample: ",i)
 
     predicted = merge_answer(predicted)
 
@@ -190,15 +190,9 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
 
 def extract_answer(start_scores, end_scores, all_tokens,token_type_ids):
     # Estrazione delle 5 risposte più probabili
-    ##########
-    print("start combination")
-    start=time.time()
-    ########
+
     results_array = KMaxCombinations(start_scores, end_scores, 5, token_type_ids)
-    ##########
-    end=time.time()
-    print("Get top 5 combination:",end-start)
-    #########
+
     final_answers = []
 
     for elem in results_array:
@@ -218,7 +212,6 @@ def extract_answer(start_scores, end_scores, all_tokens,token_type_ids):
                 if(all_tokens[i] != "[PAD]" and all_tokens[i] != "[SEP]"):
                     answer += ' ' + all_tokens[i]
         final_answers.append((answer, float(elem[0])))
-    print("Final-Answer")
     return final_answers
 
 def KMaxCombinations(start, end, K, token_type_ids):

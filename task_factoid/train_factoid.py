@@ -9,7 +9,7 @@ from tensorboard.plugins.hparams import api as hp
 from functions_factoid import *
 
 
-def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, batch_size, epochs, learning_rate, test_execution=-1, save=False):
+def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, batch_size, epochs, learning_rate, test_execution=-1, save=False, evaluation=False):
 
     # Pretrained model
     model = model_creation(max_len, learning_rate, encoder)
@@ -20,15 +20,18 @@ def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, bat
     x_data_test = x_data  # TODO:aggiungere splittaggio test
 
     # Training
-    #trained_model = run_factoid_training(
-    #    model, x_data, y_data, epochs, batch_size, logdir)
+    trained_model = run_factoid_training(
+        model, x_data, y_data, epochs, batch_size, logdir)
 
     # Evaluate
-    evaluation = test_factoid_model(trained_model=model, tokenizer=tokenizer,
+    results_evaluation={"strict_accuracy":0.0,"lenient_accuracy":0.0,"mean_reciprocal_rank":0.0}
+
+    if(evaluation==True):
+        results_evaluation = test_factoid_model(trained_model=trained_model, tokenizer=tokenizer,
                                     x_data_test=x_data_test, answer_list=answer_list)
 
-    #if(save == True):
-    #    trained_model.save_weights(logdir+"model.h5", save_format='h5')
+    if(save == True):
+        trained_model.save_weights(logdir+"model.h5", save_format='h5')
 
     # Setup tensorboard
 
@@ -55,11 +58,11 @@ def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, bat
     with tf.summary.create_file_writer(logdir).as_default():
         hp.hparams(hparams)
         tf.summary.scalar(METRIC_STRICT_ACCURACY, float(
-            evaluation["strict_accuracy"]), step=1)
+            results_evaluation["strict_accuracy"]), step=1)
         tf.summary.scalar(METRIC_LENIENT_ACCURACY, float(
-            evaluation["lenient_accuracy"]), step=1)
+            results_evaluation["lenient_accuracy"]), step=1)
         tf.summary.scalar(METRIC_MEAN_RECIPROCAL_RANK, float(
-            evaluation["mean_reciprocal_rank"]), step=1)
+            results_evaluation["mean_reciprocal_rank"]), step=1)
 
 
 #######################################################
@@ -84,5 +87,5 @@ learning_rate = 0.00001
 
 start_time = time.time()
 execute_factoid(date, logdir, dataset_path, tokenizer, encoder,
-                max_len, batch_size, epochs, learning_rate)
+                max_len, batch_size, epochs, learning_rate,evaluation=True)
 print("--- %s seconds ---" % (time.time() - start_time))
