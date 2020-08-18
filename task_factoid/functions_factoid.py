@@ -144,7 +144,8 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
     print("...Evaluate")
 
     predicted = []
-    start_scores, end_scores = trained_model(x_data_test)
+    with tf.device('/cpu:0'):
+        start_scores, end_scores = trained_model(x_data_test)
     last_elem = ""
     last_elem_count = 0
     merge_answer_list = []
