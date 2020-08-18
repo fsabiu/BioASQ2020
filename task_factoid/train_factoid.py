@@ -8,7 +8,6 @@ from transformers import BertTokenizer, TFBertModel
 from tensorboard.plugins.hparams import api as hp
 from functions_factoid import *
 
-
 def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, batch_size, epochs, learning_rate, test_execution=-1, save=False, evaluation=False):
 
     # Pretrained model
@@ -17,10 +16,11 @@ def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, bat
     # Data
     x_data, y_data, answer_list = encode_dataset(
         dataset_path, max_len, tokenizer, test_execution)
-    ###
-    #x_data_test = x_data  # TODO:aggiungere splittaggio test
+
+    # TODO:aggiungere splittaggio test
+    #x_data_test = x_data
     x_data_test, y_data_test, answer_list_test = encode_dataset(
-        dataset_path, max_len, tokenizer, 100)
+        dataset_path, max_len, tokenizer, 10)
     #######
 
     # Training
@@ -28,11 +28,12 @@ def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, bat
         model, x_data, y_data, epochs, batch_size, logdir)
 
     # Evaluate
-    results_evaluation={"strict_accuracy":0.0,"lenient_accuracy":0.0,"mean_reciprocal_rank":0.0}
+    results_evaluation = {"strict_accuracy": 0.0,
+                          "lenient_accuracy": 0.0, "mean_reciprocal_rank": 0.0}
 
-    if(evaluation==True):
+    if(evaluation == True):
         results_evaluation = test_factoid_model(trained_model=trained_model, tokenizer=tokenizer,
-                                    x_data_test=x_data_test, answer_list=answer_list)
+                                                x_data_test=x_data_test, answer_list=answer_list_test)
 
     if(save == True):
         trained_model.save_weights(logdir+"model.h5", save_format='h5')
@@ -84,12 +85,12 @@ max_len = 512
 batch_size = 5
 epochs = 1
 learning_rate = 0.00001
-#test_execution = 50
+test_execution = 7
 
 
 ###########################################################
 if __name__ == "__main__":
     start_time = time.time()
     execute_factoid(date, logdir, dataset_path, tokenizer, encoder,
-                    max_len, batch_size, epochs, learning_rate,evaluation=True)
+                    max_len, batch_size, epochs, learning_rate, test_execution=test_execution, evaluation=True)
     print("--- %s seconds ---" % (time.time() - start_time))
