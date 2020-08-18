@@ -17,7 +17,11 @@ def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, bat
     # Data
     x_data, y_data, answer_list = encode_dataset(
         dataset_path, max_len, tokenizer, test_execution)
-    x_data_test = x_data  # TODO:aggiungere splittaggio test
+    ###
+    #x_data_test = x_data  # TODO:aggiungere splittaggio test
+    x_data_test, y_data_test, answer_list_test = encode_dataset(
+        dataset_path, max_len, tokenizer, 100)
+    #######
 
     # Training
     trained_model = run_factoid_training(
