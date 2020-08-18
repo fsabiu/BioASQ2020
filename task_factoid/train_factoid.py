@@ -88,8 +88,8 @@ learning_rate = 0.00001
 
 
 ###########################################################
-
-start_time = time.time()
-execute_factoid(date, logdir, dataset_path, tokenizer, encoder,
-                max_len, batch_size, epochs, learning_rate,evaluation=True)
-print("--- %s seconds ---" % (time.time() - start_time))
+if __name__ == "__main__":
+    start_time = time.time()
+    execute_factoid(date, logdir, dataset_path, tokenizer, encoder,
+                    max_len, batch_size, epochs, learning_rate,evaluation=True)
+    print("--- %s seconds ---" % (time.time() - start_time))
