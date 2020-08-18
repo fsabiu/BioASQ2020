@@ -176,7 +176,7 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
             start_scores[i], end_scores[i], all_tokens, x_data_test[1][i])
 
         predicted.append((answer_extract, last_elem_count))
-        print("Sample: ",i)
+        print("Sample: ",i,"/",len(x_data_test[0]))
 
     predicted = merge_answer(predicted)
 
