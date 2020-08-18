@@ -75,14 +75,14 @@ encoder = TFBertModel.from_pretrained(
 
 max_len = 512
 batch_size = 10
-epochs = 3
+epochs = 2
 learning_rate = 0.00001
-test_execution = 20
+#test_execution = 20
 
 
 ###########################################################
 
 start_time = time.time()
 execute_factoid(date, logdir, dataset_path, tokenizer, encoder,
-                max_len, batch_size, epochs, learning_rate, test_execution)
+                max_len, batch_size, epochs, learning_rate)
 print("--- %s seconds ---" % (time.time() - start_time))
