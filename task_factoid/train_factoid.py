@@ -20,15 +20,15 @@ def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, bat
     x_data_test = x_data  # TODO:aggiungere splittaggio test
 
     # Training
-    trained_model = run_factoid_training(
-        model, x_data, y_data, epochs, batch_size, logdir)
+    #trained_model = run_factoid_training(
+    #    model, x_data, y_data, epochs, batch_size, logdir)
 
     # Evaluate
-    evaluation = test_factoid_model(trained_model=trained_model, tokenizer=tokenizer,
+    evaluation = test_factoid_model(trained_model=model, tokenizer=tokenizer,
                                     x_data_test=x_data_test, answer_list=answer_list)
 
-    if(save == True):
-        trained_model.save_weights(logdir+"model.h5", save_format='h5')
+    #if(save == True):
+    #    trained_model.save_weights(logdir+"model.h5", save_format='h5')
 
     # Setup tensorboard
 
