@@ -144,8 +144,22 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
     print("...Evaluate")
 
     predicted = []
-    with tf.device('/cpu:0'):
-        start_scores, end_scores = trained_model(x_data_test)
+    
+    #start_scores, end_scores = trained_model(x_data_test)
+    start_scores=[]
+    end_scores=[]
+    for i in range(0,len(x_data_test)):
+        start_scores_local,end_scores_local=trained_model([np.array([x_data_test[0][i]]),np.array([x_data_test[1][i]]),np.array([x_data_test[2][i]])])
+        start_scores.append(start_scores_local[0])
+        end_scores.append(end_scores_local[0])
+
+    start_scores_old, end_scores_old = trained_model(x_data_test)
+    start_scores=tf.convert_to_tensor(start_scores)
+    end_scores=tf.convert_to_tensor(end_scores)
+
+    print(start_scores_old)
+    print(start_scores)
+
     last_elem = ""
     last_elem_count = 0
     merge_answer_list = []
