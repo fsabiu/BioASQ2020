@@ -8,20 +8,18 @@ from transformers import BertTokenizer, TFBertModel
 from tensorboard.plugins.hparams import api as hp
 from functions_factoid import *
 
-def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, batch_size, epochs, learning_rate, test_execution=-1, save=False, evaluation=False):
+def execute_factoid(date, logdir, dataset_path_train, dataset_path_test, tokenizer, encoder, max_len, batch_size, epochs, learning_rate, test_execution=-1, save=False, evaluation=False):
 
     # Pretrained model
     model = model_creation(max_len, learning_rate, encoder)
 
     # Data
-    x_data, y_data, answer_list = encode_dataset(
-        dataset_path, max_len, tokenizer, test_execution)
+    x_data, y_data, _ = encode_dataset(
+        dataset_path_train, max_len, tokenizer, test_execution)
 
-    # TODO:aggiungere splittaggio test
-    #x_data_test = x_data
-    x_data_test, y_data_test, answer_list_test = encode_dataset(
-        dataset_path, max_len, tokenizer, 10)
-    #######
+    x_data_test, _, answer_list_test = encode_dataset(
+        dataset_path_test, max_len, tokenizer,test_execution)
+
 
     # Training
     trained_model = run_factoid_training(
@@ -75,7 +73,8 @@ def execute_factoid(date, logdir, dataset_path, tokenizer, encoder, max_len, bat
 date = datetime.now().strftime("%Y%m%d_%H%M%S")+"/"
 logdir = "./task_factoid/runs/"+str(date)
 
-dataset_path = "./data/training8b.json"
+dataset_path_train = "./data/train_8b.json"
+dataset_path_test = "./data/test_8b.json"
 tokenizer = BertTokenizer.from_pretrained(
     "./transformers_models/biobert_factoid_pytorch")
 encoder = TFBertModel.from_pretrained(
@@ -91,6 +90,6 @@ test_execution = 7
 ###########################################################
 if __name__ == "__main__":
     start_time = time.time()
-    execute_factoid(date, logdir, dataset_path, tokenizer, encoder,
+    execute_factoid(date, logdir, dataset_path_train,dataset_path_test, tokenizer, encoder,
                     max_len, batch_size, epochs, learning_rate, test_execution=test_execution, evaluation=True)
     print("--- %s seconds ---" % (time.time() - start_time))

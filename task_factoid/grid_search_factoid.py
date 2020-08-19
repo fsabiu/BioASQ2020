@@ -17,7 +17,8 @@ for elem in params_list:
     date = datetime.now().strftime("%Y%m%d_%H%M%S")+"/"
     logdir = "./task_factoid/runs/"+str(date)
 
-    dataset_path = "./data/training8b.json"
+    dataset_path_train = "./data/train_8b.json"
+    dataset_path_test = "./data/test_8b.json"
     tokenizer = BertTokenizer.from_pretrained(
         "./transformers_models/biobert_factoid_pytorch")
     encoder = TFBertModel.from_pretrained(
@@ -31,5 +32,5 @@ for elem in params_list:
     # Delete for complete run
     test_execution = 7
 
-    execute_factoid(date=date, logdir=logdir, dataset_path=dataset_path, tokenizer=tokenizer, encoder=encoder,
+    execute_factoid(date=date, logdir=logdir, dataset_path_train=dataset_path_train, dataset_path_test=dataset_path_test, tokenizer=tokenizer, encoder=encoder,
                     max_len=max_len, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate, test_execution=test_execution)
