@@ -70,6 +70,10 @@ def evaluate_list(predicted, target):
 
         precision_list.append(precision)
         recall_list.append(recall)
-        f1_list.append(2*((precision*recall)/(precision+recall)))
+        
+        if(precision+recall!=0):
+            f1_list.append(2*((precision*recall)/(precision+recall)))
+        else:
+            f1_list.append(0)
 
-    return {"mean_precison": statistics.mean(precision_list), "mean_recall": statistics.mean(recall_list), "mean f1": statistics.mean(f1_list)}
+    return {"mean_precison": statistics.mean(precision_list), "mean_recall": statistics.mean(recall_list), "mean_f1": statistics.mean(f1_list)}
