@@ -4,6 +4,7 @@ utils/__pycache__
 utils/notebooks/logs
 transformers_models/*
 embedding_files/*
+task_factoid/__pycache__/*
 
 !transformers_models/.gitkeep 
 !embedding_files/.gitkeep 

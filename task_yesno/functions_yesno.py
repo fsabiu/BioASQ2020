@@ -5,6 +5,7 @@ import progressbar
 import pickle
 import sys, os
 import datetime
+from sklearn.model_selection import train_test_split
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.data import load_data, generate_embeddings_yesno, generate_embeddings_yesno_pooling, load_embeddings
@@ -12,11 +13,13 @@ from utils.data import load_data, generate_embeddings_yesno, generate_embeddings
 
 from flair.embeddings import ELMoEmbeddings, DocumentPoolEmbeddings
 # from flair.embeddings import Sentence
-from tensorflow.keras.layers import Dense, Conv1D, MaxPooling1D, Embedding, InputLayer
+from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, MaxPooling1D, Embedding, InputLayer
 from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import RMSprop, Adam
 import numpy as np
+
 VALIDATION_SPLIT = 0.33
-EPOCHS = 5
+EPOCHS = 10
 
 
 def get_embedding(data, file_embedding = None):
@@ -31,33 +34,45 @@ def get_embedding(data, file_embedding = None):
 
 
 def enconde_dataset(embeddings):
-    emb_numpy = np.array(embeddings)
-    indices = np.arange(emb_numpy.shape[0])
-    np.random.shuffle(indices)
+    # emb_numpy = np.array(embeddings)
+    # indices = np.arange(emb_numpy.shape[0])
+    # np.random.shuffle(indices)
 
     # Data includes questions (0) and snippets (2)
-    data = emb_numpy[indices,0::2]
-    labels = np.array(emb_numpy[indices,1], dtype=np.float)
-    nb_validation_samples = int(VALIDATION_SPLIT * data.shape[0])
+    # data = emb_numpy[indices,0::2]
+    data = np.array([np.concatenate((np.array(el[0]), np.array(el[2])),axis=None) for el in embeddings])
 
-    data = np.array([np.concatenate([el[0].data, el[1].data]) for el in data])
+    # labels = np.array(emb_numpy[:,1], dtype=np.float)
+    labels = np.array([[el[1]] for el in embeddings])
 
-    x_develop = data[:-nb_validation_samples]
-    y_develop = labels[:-nb_validation_samples]
-
-    x_train = x_develop[:-nb_validation_samples]
+    # data = np.array([np.concatenate([el[0].data, el[1].data]) for el in data])
+    x_train, x_test, y_train, y_test = train_test_split(data, labels) # Verificare che stratify prenda la classe
     x_train = np.reshape(x_train, [len(x_train), len(x_train[0]), 1])
-    # x_train = np.expand_dims(x_train, 2)
-    y_train = y_develop[:-nb_validation_samples]
-    # y_train = np.expand_dims(y_train, 1)
+    x_train = apply_pooling(x_train)
+    x_test = np.reshape(x_test, [len(x_test), len(x_test[0]), 1])
+    x_test = apply_pooling(x_test)
+
+    # x_develop = data[:-nb_validation_samples]
+    # y_develop = labels[:-nb_validation_samples]
+
+    # x_train = x_develop[:-nb_validation_samples]
+
+    # x_train = np.reshape(x_train, [len(x_train), len(x_train[0]), 1])
+    
+    # # x_train = np.expand_dims(x_train, 2) # Non funziona
+    # y_train = y_develop[:-nb_validation_samples]
+    # # y_train = np.expand_dims(y_train, 1) # Non funziona
 
     # Hold out validation
-    x_val = x_develop[-nb_validation_samples:]
-    y_val = y_develop[-nb_validation_samples:]
+    x_val = 0 # x_develop[-nb_validation_samples:]
+    y_val = 0 # y_develop[-nb_validation_samples:]
 
     # Hold out test
-    x_test = data[-nb_validation_samples:]
-    y_test = labels[-nb_validation_samples:]
+    # x_test = data[-nb_validation_samples:]
+
+    # x_test = np.reshape(x_test, [len(x_test), len(x_test[0]), 1])
+    
+    # y_test = labels[-nb_validation_samples:]
 
     return x_train, y_train, x_val, y_val, x_test, y_test
 
@@ -116,10 +131,14 @@ def train_test_model(hparams, logdir, x_train, y_train, x_val, y_val):
     return accuracy
 '''
 
-def model_creation(hidden_layers, hidden_units, act_function, x_train):
 
+def apply_pooling(data):
+    output = MaxPool1D(pool_size=2, strides=2)(data)
+    return np.squeeze(output)
+
+def model_creation(hidden_layers, hidden_units, act_function):
     model = tf.keras.models.Sequential()
-    model.add(MaxPooling1D(5))
+    # model.add(MaxPooling1D(5))
     # model.add(Conv1D(filters=5, kernel_size=5, padding="same"))
     for i in range(hidden_layers):
         # model.add(Dense(hparams[HP_NUM_UNITS], activation = hparams[HP_ACT_FUN]))
@@ -127,7 +146,7 @@ def model_creation(hidden_layers, hidden_units, act_function, x_train):
     model.add(Dense(2))
 
     model.compile(
-        optimizer="adam",
+        optimizer=Adam(learning_rate=1e-4),
         loss='sparse_categorical_crossentropy',
         metrics=['accuracy'],
     )
@@ -135,7 +154,9 @@ def model_creation(hidden_layers, hidden_units, act_function, x_train):
     return model
 
 def run_yesno_training(model, x_train, y_train):
-    print("training ...")
+    print("training ...", np.shape(x_train))
+    print("label ...", np.shape(y_train))
+    # x_train = apply_pooling(x_train)
     model.fit(x_train, y_train, 
         # batch_size = BATCH_SIZE,
         epochs = EPOCHS,
@@ -150,22 +171,21 @@ def run_yesno_training(model, x_train, y_train):
 
     return model
     
-
 dataset_path = "./data/training8b.json"
 data = load_data(dataset_path, "yesno")
 print("Getting embedding ")
-emb = get_embedding(data, "./data/embedding_yes_no.emb")
+emb = get_embedding(data, "./embedding_yes_no.emb")
+# emb = get_embedding(data)
 print("Getting data")
 x_train, y_train, x_val, y_val, x_test, y_test = enconde_dataset(emb)
 
-training_model = model_creation(2, 5, 'sigmoid', x_train)
+training_model = model_creation(2, 5, 'sigmoid')
 training_model = run_yesno_training(training_model, x_train, y_train)
 
 print("Sample "+str(np.shape(x_test)))
 
+# x_test = apply_pooling(x_test)
 y_pred = training_model.predict(x_test)
+
 print(y_pred)
 print(np.shape(y_test))
-
-
-
