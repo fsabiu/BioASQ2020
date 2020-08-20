@@ -2,11 +2,15 @@ from itertools import product
 from datetime import datetime
 from transformers import BertTokenizer, TFBertModel
 from train_factoid import execute_factoid
+import tensorflow as tf
+
+tf.get_logger().setLevel('ERROR')
+
 
 grid_params = {'max_len': [300,200],
-               'batch_size': [10],
-               'epochs': [1, 2],
-               'learning_rate': [0.00001, 0.0001]}
+               'batch_size': [5,15,30],
+               'epochs': [15],
+               'learning_rate': [0.00001, 0.0001, 0.00005, 0.0005]}
 
 keys, values = zip(*grid_params.items())
 params_list = [dict(zip(keys, v)) for v in product(*values)]
@@ -32,5 +36,8 @@ for elem in params_list:
     # Delete for complete run
     test_execution = 7
 
-    execute_factoid(date=date, logdir=logdir, dataset_path_train=dataset_path_train, dataset_path_test=dataset_path_test, tokenizer=tokenizer, encoder=encoder,
+    try:
+        execute_factoid(date=date, logdir=logdir, dataset_path_train=dataset_path_train, dataset_path_test=dataset_path_test, tokenizer=tokenizer, encoder=encoder,
                     max_len=max_len, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate, test_execution=test_execution)
+    except:
+        print("Tensorflow chelladi!!!!")
