@@ -80,11 +80,11 @@ tokenizer = BertTokenizer.from_pretrained(
 encoder = TFBertModel.from_pretrained(
     "./transformers_models/biobert_factoid_pytorch", from_pt=True)
 
-max_len = 512
-batch_size = 5
+max_len = 200
+batch_size = 15
 epochs = 1
 learning_rate = 0.00001
-test_execution = 7
+test_execution = -1
 
 
 ###########################################################

@@ -67,7 +67,6 @@ def encode_dataset(dataset_path, max_len, tokenizer, test_execution=-1):
     start_aswer_list = []
     end_answer_list = []
     answer_list = []
-
     for sample in dataset_processed:
 
         # sample[0] question

@@ -3,7 +3,7 @@ from datetime import datetime
 from transformers import BertTokenizer, TFBertModel
 from train_factoid import execute_factoid
 
-grid_params = {'max_len': [512],
+grid_params = {'max_len': [300,200],
                'batch_size': [10],
                'epochs': [1, 2],
                'learning_rate': [0.00001, 0.0001]}
