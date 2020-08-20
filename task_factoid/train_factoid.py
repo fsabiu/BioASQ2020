@@ -68,27 +68,26 @@ def execute_factoid(date, logdir, dataset_path_train, dataset_path_test, tokeniz
             results_evaluation["mean_reciprocal_rank"]), step=1)
 
 
-#######################################################
-# Parameters
-date = datetime.now().strftime("%Y%m%d_%H%M%S")+"/"
-logdir = "./task_factoid/runs/"+str(date)
 
-dataset_path_train = "./data/train_8b.json"
-dataset_path_test = "./data/test_8b.json"
-tokenizer = BertTokenizer.from_pretrained(
-    "./transformers_models/biobert_factoid_pytorch")
-encoder = TFBertModel.from_pretrained(
-    "./transformers_models/biobert_factoid_pytorch", from_pt=True)
-
-max_len = 200
-batch_size = 10
-epochs = 3
-learning_rate = 0.0005
-test_execution = 50
-
-
-###########################################################
 if __name__ == "__main__":
+    #######################################################
+    # Parameters
+    date = datetime.now().strftime("%Y%m%d_%H%M%S")+"/"
+    logdir = "./task_factoid/runs/"+str(date)
+
+    dataset_path_train = "./data/train_8b.json"
+    dataset_path_test = "./data/test_8b.json"
+    tokenizer = BertTokenizer.from_pretrained(
+        "./transformers_models/biobert_factoid_pytorch")
+    encoder = TFBertModel.from_pretrained(
+        "./transformers_models/biobert_factoid_pytorch", from_pt=True)
+
+    max_len = 200
+    batch_size = 10
+    epochs = 3
+    learning_rate = 0.0005
+    test_execution = 50
+###########################################################
     start_time = time.time()
     execute_factoid(date, logdir, dataset_path_train,dataset_path_test, tokenizer, encoder,
                     max_len, batch_size, epochs, learning_rate, test_execution=test_execution, evaluation=True)

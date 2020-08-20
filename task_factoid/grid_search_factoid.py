@@ -4,9 +4,6 @@ from transformers import BertTokenizer, TFBertModel
 from train_factoid import execute_factoid
 import tensorflow as tf
 
-tf.get_logger().setLevel('ERROR')
-
-
 grid_params = {'max_len': [300,200],
                'batch_size': [5,15,30],
                'epochs': [15],
@@ -34,10 +31,10 @@ for elem in params_list:
     learning_rate = elem["learning_rate"]
 
     # Delete for complete run
-    test_execution = 7
+    #test_execution = 7
 
     try:
         execute_factoid(date=date, logdir=logdir, dataset_path_train=dataset_path_train, dataset_path_test=dataset_path_test, tokenizer=tokenizer, encoder=encoder,
-                    max_len=max_len, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate, test_execution=test_execution)
+                    max_len=max_len, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate)
     except:
         print("Tensorflow chelladi!!!!")
