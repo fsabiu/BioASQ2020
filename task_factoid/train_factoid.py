@@ -83,12 +83,12 @@ if __name__ == "__main__":
         "./transformers_models/biobert_factoid_pytorch", from_pt=True)
 
     max_len = 200
-    batch_size = 10
-    epochs = 3
-    learning_rate = 0.0005
-    test_execution = 50
+    batch_size = 5
+    epochs = 10
+    learning_rate = 0.00005
+    test_execution = -1
 ###########################################################
     start_time = time.time()
     execute_factoid(date, logdir, dataset_path_train,dataset_path_test, tokenizer, encoder,
-                    max_len, batch_size, epochs, learning_rate, test_execution=test_execution, evaluation=True)
+                    max_len, batch_size, epochs, learning_rate, test_execution=test_execution, evaluation=False)
     print("--- %s seconds ---" % (time.time() - start_time))

@@ -43,7 +43,7 @@ def model_creation(max_len, learning_rate,encoder):
     loss = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
     
     optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-    model.compile(optimizer=optimizer, loss=[loss, loss])
+    model.compile(optimizer=optimizer, loss=[loss, loss], metrics=[loss])
     return model
 
 def encode_dataset(dataset_path, max_len, tokenizer, test_execution=-1):
