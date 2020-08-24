@@ -6,23 +6,32 @@ import pickle
 import sys, os
 import datetime
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, f1_score
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.data import load_data, generate_embeddings_yesno, generate_embeddings_yesno_pooling, load_embeddings
 
-
 from flair.embeddings import ELMoEmbeddings, DocumentPoolEmbeddings
-# from flair.embeddings import Sentence
 from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, MaxPooling1D, Embedding, InputLayer
 from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import RMSprop, Adam
 import numpy as np
 
-VALIDATION_SPLIT = 0.33
-EPOCHS = 10
+BATCH_SIZE = 4
+VALIDATION_SPLIT = 0.15
+EPOCHS = 50
 
 
-def get_embedding(data, file_embedding = None):
+def evaluate_yes_no(predicted, target):
+    accuracy=accuracy_score(y_true=target, y_pred=predicted)
+
+    f1_y=f1_score(y_true=target, y_pred=predicted, average='binary', pos_label=1)
+    f1_n=f1_score(y_true=target, y_pred=predicted, average='binary', pos_label=0)
+    macro_average_f_measure=(f1_y+f1_n)/2
+
+    return {'accuracy':accuracy,'macro_average_f_measure':macro_average_f_measure}
+
+def get_embedding(data = None, file_embedding = None):
     if file_embedding is None:
         embeddings_elmo_pubmed = ELMoEmbeddings('pubmed') 
         pooling_model = DocumentPoolEmbeddings([embeddings_elmo_pubmed])
@@ -33,49 +42,22 @@ def get_embedding(data, file_embedding = None):
     return embeddings
 
 
-def enconde_dataset(embeddings):
-    # emb_numpy = np.array(embeddings)
-    # indices = np.arange(emb_numpy.shape[0])
-    # np.random.shuffle(indices)
-
+def enconde_dataset(embeddings, pool_size=1, test_size=None):
     # Data includes questions (0) and snippets (2)
-    # data = emb_numpy[indices,0::2]
     data = np.array([np.concatenate((np.array(el[0]), np.array(el[2])),axis=None) for el in embeddings])
 
-    # labels = np.array(emb_numpy[:,1], dtype=np.float)
-    labels = np.array([[el[1]] for el in embeddings])
+    labels = np.array([el[1] for el in embeddings])
 
-    # data = np.array([np.concatenate([el[0].data, el[1].data]) for el in data])
-    x_train, x_test, y_train, y_test = train_test_split(data, labels) # Verificare che stratify prenda la classe
-    x_train = np.reshape(x_train, [len(x_train), len(x_train[0]), 1])
-    x_train = apply_pooling(x_train)
-    x_test = np.reshape(x_test, [len(x_test), len(x_test[0]), 1])
-    x_test = apply_pooling(x_test)
+    # Lo split potrebbe essere inutile dal momento che il validation è creato dal fit del modello
+    if test_size is not None:
+        x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.3)
+        x_train = apply_pooling(x_train, pool_size)
+        x_test = apply_pooling(x_test, pool_size)
+        return x_train, y_train, x_test, y_test
+    else: 
+        return data, labels
 
-    # x_develop = data[:-nb_validation_samples]
-    # y_develop = labels[:-nb_validation_samples]
-
-    # x_train = x_develop[:-nb_validation_samples]
-
-    # x_train = np.reshape(x_train, [len(x_train), len(x_train[0]), 1])
-    
-    # # x_train = np.expand_dims(x_train, 2) # Non funziona
-    # y_train = y_develop[:-nb_validation_samples]
-    # # y_train = np.expand_dims(y_train, 1) # Non funziona
-
-    # Hold out validation
-    x_val = 0 # x_develop[-nb_validation_samples:]
-    y_val = 0 # y_develop[-nb_validation_samples:]
-
-    # Hold out test
-    # x_test = data[-nb_validation_samples:]
-
-    # x_test = np.reshape(x_test, [len(x_test), len(x_test[0]), 1])
-    
-    # y_test = labels[-nb_validation_samples:]
-
-    return x_train, y_train, x_val, y_val, x_test, y_test
-
+'''
 def hyperparameter_creation(hp_dict):
     HP_NUM_UNITS = hp.HParam('num_units', hp.Discrete(hp_dict['num_units']))
     HP_NUM_HIDDENS = hp.HParam('num_hiddens', hp.Discrete(hp_dict['num_hiddens']))
@@ -100,6 +82,7 @@ def hyperparameter_creation(hp_dict):
         HP_OPTIMIZER: HP_OPTIMIZER.domain.values,
     }
     return hparams
+'''
 
 ''' TODO: Input: haparams
 def train_test_model(hparams, logdir, x_train, y_train, x_val, y_val):
@@ -132,60 +115,39 @@ def train_test_model(hparams, logdir, x_train, y_train, x_val, y_val):
 '''
 
 
-def apply_pooling(data):
-    output = MaxPool1D(pool_size=2, strides=2)(data)
+def apply_pooling(data, pool_size=1):
+    data = np.reshape(data, [len(data), len(data[0]), 1])
+    output = MaxPool1D(pool_size=pool_size)(data)
     return np.squeeze(output)
 
-def model_creation(hidden_layers, hidden_units, act_function):
+def model_creation(hidden_layers, hidden_units, act_function, learning_rate, optimizer):
     model = tf.keras.models.Sequential()
     # model.add(MaxPooling1D(5))
-    # model.add(Conv1D(filters=5, kernel_size=5, padding="same"))
     for i in range(hidden_layers):
-        # model.add(Dense(hparams[HP_NUM_UNITS], activation = hparams[HP_ACT_FUN]))
         model.add(Dense(hidden_units, activation = act_function))
     model.add(Dense(2))
 
     model.compile(
-        optimizer=Adam(learning_rate=1e-4),
-        loss='sparse_categorical_crossentropy',
+        optimizer=optimizer(learning_rate=learning_rate),
+        loss='binary_crossentropy',
         metrics=['accuracy'],
     )
 
     return model
 
-def run_yesno_training(model, x_train, y_train):
-    print("training ...", np.shape(x_train))
-    print("label ...", np.shape(y_train))
-    # x_train = apply_pooling(x_train)
-    model.fit(x_train, y_train, 
-        # batch_size = BATCH_SIZE,
-        epochs = EPOCHS,
-        # validation_data = (x_val, y_val),
-        # callbacks = [
-        #     tf.keras.callbacks.TensorBoard(logdir),  # log metrics
-        #     hp.KerasCallback(logdir, hparams),  # log hparams
-        # ]
-    )
+def run_yesno_training(model, x_train, y_train, pool_size, batch_size, logdir):
+    if pool_size != 1:
+        x_train = apply_pooling(x_train, pool_size)
 
+    model.fit(x_train, y_train, 
+        batch_size = BATCH_SIZE,
+        epochs = EPOCHS,
+        validation_split = VALIDATION_SPLIT,
+        callbacks = [
+            tf.keras.callbacks.TensorBoard(logdir),  # log metrics
+        #     hp.KerasCallback(logdir, hparams),  # log hparams
+        ]
+    )
     model.summary()
 
     return model
-    
-dataset_path = "./data/training8b.json"
-data = load_data(dataset_path, "yesno")
-print("Getting embedding ")
-emb = get_embedding(data, "./embedding_yes_no.emb")
-# emb = get_embedding(data)
-print("Getting data")
-x_train, y_train, x_val, y_val, x_test, y_test = enconde_dataset(emb)
-
-training_model = model_creation(2, 5, 'sigmoid')
-training_model = run_yesno_training(training_model, x_train, y_train)
-
-print("Sample "+str(np.shape(x_test)))
-
-# x_test = apply_pooling(x_test)
-y_pred = training_model.predict(x_test)
-
-print(y_pred)
-print(np.shape(y_test))
