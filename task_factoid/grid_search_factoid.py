@@ -9,6 +9,7 @@ grid_params = {'max_len': [300,200],
                'epochs': [15],
                'learning_rate': [0.00001, 0.0001, 0.00005, 0.0005]}
 
+
 keys, values = zip(*grid_params.items())
 params_list = [dict(zip(keys, v)) for v in product(*values)]
 
@@ -31,7 +32,7 @@ for elem in params_list:
     learning_rate = elem["learning_rate"]
 
     # Delete for complete run
-    test_execution = 50
+    test_execution = -1
 
     try:
         execute_factoid(date=date, logdir=logdir, dataset_path_train=dataset_path_train, dataset_path_test=dataset_path_test, tokenizer=tokenizer, encoder=encoder,
