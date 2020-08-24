@@ -86,7 +86,7 @@ if __name__ == "__main__":
     batch_size = 5
     epochs = 10
     learning_rate = 0.00005
-    test_execution = -1
+    test_execution = 50
 ###########################################################
     start_time = time.time()
     execute_factoid(date, logdir, dataset_path_train,dataset_path_test, tokenizer, encoder,

@@ -31,10 +31,10 @@ for elem in params_list:
     learning_rate = elem["learning_rate"]
 
     # Delete for complete run
-    #test_execution = 7
+    test_execution = 50
 
     try:
         execute_factoid(date=date, logdir=logdir, dataset_path_train=dataset_path_train, dataset_path_test=dataset_path_test, tokenizer=tokenizer, encoder=encoder,
-                    max_len=max_len, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate)
+                    max_len=max_len, batch_size=batch_size, epochs=epochs, test_execution=test_execution,learning_rate=learning_rate)
     except:
         print("Tensorflow chelladi!!!!")
