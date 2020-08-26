@@ -150,7 +150,6 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
 
     predicted = []
     
-    #start_scores_old, end_scores_old = trained_model(x_data_test)
     start_scores=[]
     end_scores=[]
     for i in range(len(x_data_test[0])):
