@@ -15,7 +15,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from tf.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import EarlyStopping
 from tokenizers import BertWordPieceTokenizer
 from transformers import BertTokenizer, TFBertModel, BertConfig, BertForQuestionAnswering, BertModel, BertForPreTraining
 
@@ -130,7 +130,7 @@ def run_factoid_training(model, x_data, y_data, epochs, batch_size,logdir,early_
     callback_training.append(tensorboard_callback)
 
     if(early_stopping==True):
-        earlystop_callback = EarlyStopping(monitor='val_accuracy', min_delta=0.0001,patience=1)
+        earlystop_callback = EarlyStopping(monitor='val_loss', min_delta=0.0001,patience=1)
         callback_training.append(earlystop_callback)
 
     model.fit(
