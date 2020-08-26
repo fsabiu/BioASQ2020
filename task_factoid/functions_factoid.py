@@ -15,6 +15,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+from tf.keras.callbacks import EarlyStopping
 from tokenizers import BertWordPieceTokenizer
 from transformers import BertTokenizer, TFBertModel, BertConfig, BertForQuestionAnswering, BertModel, BertForPreTraining
 
@@ -120,22 +121,27 @@ def encode_dataset(dataset_path, max_len, tokenizer, test_execution=-1):
 
     return x_data, y_data, answer_list
 
-def run_factoid_training(model, x_data, y_data, epochs, batch_size,logdir):
-    #La validazione è fatta in automatico con validation split
+def run_factoid_training(model, x_data, y_data, epochs, batch_size,logdir,early_stopping=False):
+
     print("...Training")
 
+    callback_training=[]
     tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir,profile_batch=0)
+    callback_training.append(tensorboard_callback)
+
+    if(early_stopping==True):
+        earlystop_callback = EarlyStopping(monitor='val_accuracy', min_delta=0.0001,patience=1)
+        callback_training.append(earlystop_callback)
 
     model.fit(
         x_data,
         y_data,
         batch_size=batch_size,
-        #validation_data=(x_data, y_data),
-        validation_split=0.15,#mettere validation split quando si fa un allenamento completo
+        validation_split=0.15,
         epochs=epochs,
         verbose=1,
         use_multiprocessing=True,
-        callbacks=[tensorboard_callback]
+        callbacks=callback_training
     )
     return model
 
