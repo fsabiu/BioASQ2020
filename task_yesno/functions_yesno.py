@@ -50,70 +50,12 @@ def enconde_dataset(embeddings, pool_size=1, test_size=None):
 
     # Lo split potrebbe essere inutile dal momento che il validation è creato dal fit del modello
     if test_size is not None:
-        x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.3)
+        x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=test_size)
         x_train = apply_pooling(x_train, pool_size)
         x_test = apply_pooling(x_test, pool_size)
         return x_train, y_train, x_test, y_test
     else: 
         return data, labels
-
-'''
-def hyperparameter_creation(hp_dict):
-    HP_NUM_UNITS = hp.HParam('num_units', hp.Discrete(hp_dict['num_units']))
-    HP_NUM_HIDDENS = hp.HParam('num_hiddens', hp.Discrete(hp_dict['num_hiddens']))
-    HP_ACT_FUN = hp.HParam('act_fun', hp.Discrete(hp_dict['act_fun']))
-    HP_OPTIMIZER = hp.HParam('optimizer', hp.Discrete(['adam', 'sgd']))
-
-    METRIC_ACCURACY = 'accuracy'
-
-    directory_results = 'logs/hparam_tuning'+ datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-
-    with tf.summary.create_file_writer(directory_results).as_default():
-        hp.hparams_config(
-            hparams=[HP_NUM_UNITS, HP_NUM_HIDDENS, HP_ACT_FUN, HP_OPTIMIZER],
-            metrics=[hp.Metric(METRIC_ACCURACY, display_name='Accuracy')],
-        )
-
-    hparams = {
-        HP_NUM_UNITS: HP_NUM_UNITS.domain.values,
-        HP_NUM_HIDDENS: HP_NUM_HIDDENS.domain.values,
-        HP_ACT_FUN: HP_ACT_FUN.domain.values,
-        # HP_DROPOUT: HP_DROPOUT.domain.values,
-        HP_OPTIMIZER: HP_OPTIMIZER.domain.values,
-    }
-    return hparams
-'''
-
-''' TODO: Input: haparams
-def train_test_model(hparams, logdir, x_train, y_train, x_val, y_val):
-    model = tf.keras.models.Sequential()
-    x = MaxPooling1D()(x_train)
-    for i in range(hparams[HP_NUM_HIDDENS]):
-        # model.add(Dense(hparams[HP_NUM_UNITS], activation = hparams[HP_ACT_FUN]))
-        x = Dense(hparams[HP_NUM_UNITS], activation = hparams[HP_ACT_FUN])(x)
-
-    model.compile(
-        optimizer=hparams[HP_OPTIMIZER],
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy'],
-    )
-
-    model.fit(x_train, y_train, 
-        # batch_size = BATCH_SIZE,
-        epochs = EPOCHS,
-        validation_data = (x_val, y_val),
-        callbacks = [
-            tf.keras.callbacks.TensorBoard(logdir),  # log metrics
-            hp.KerasCallback(logdir, hparams),  # log hparams
-        ]
-    ) # Run with 1 epoch to speed things up for demo purposes
-
-    # TODO: change evaluation matrix, using different functions
-    _, accuracy = model.evaluate(x_val, y_val)
-
-    return accuracy
-'''
-
 
 def apply_pooling(data, pool_size=1):
     data = np.reshape(data, [len(data), len(data[0]), 1])

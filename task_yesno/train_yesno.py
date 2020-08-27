@@ -82,15 +82,15 @@ if __name__ == "__main__":
     print("Getting embedding ")
     emb = get_embedding(file_embedding = "./embedding_yes_no_augmented.emb")
     print("Getting data")
-    x_train, y_train = enconde_dataset(emb)
+    x_train, y_train, x_test, y_test = enconde_dataset(emb, pool_size=1, test_size=0.2)
 
-    hidden_layers = 1
-    hidden_units = 120
-    act_funct = 'tanh'
+    hidden_layers = 4
+    hidden_units = 100
+    act_funct = 'relu'
     learning_rate = 1e-5
     optimizer = RMSprop
     pool_size = 1
     batch_size = None
 
-    execute_yesno(x_train, y_train, hidden_layers, hidden_units, act_funct, learning_rate, optimizer, pool_size, batch_size)
+    execute_yesno(x_train, y_train, hidden_layers, hidden_units, act_funct, learning_rate, optimizer, pool_size, batch_size, x_test=x_test, y_test=y_test)
 
