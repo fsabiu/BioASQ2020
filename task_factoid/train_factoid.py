@@ -8,7 +8,7 @@ from transformers import BertTokenizer, TFBertModel
 from tensorboard.plugins.hparams import api as hp
 from functions_factoid import *
 
-def execute_factoid(date, logdir, dataset_path_train, dataset_path_test, tokenizer, encoder, max_len, batch_size, epochs, learning_rate, test_execution=-1, save=False, evaluation=False):
+def execute_factoid(date, logdir, dataset_path_train, dataset_path_test, tokenizer, encoder, max_len, batch_size, epochs, learning_rate, test_execution=-1, save=False, evaluation=False, early_stopping=False):
 
     # Pretrained model
     model = model_creation(max_len, learning_rate, encoder)
@@ -23,7 +23,7 @@ def execute_factoid(date, logdir, dataset_path_train, dataset_path_test, tokeniz
 
     # Training
     trained_model = run_factoid_training(
-        model, x_data, y_data, epochs, batch_size, logdir)
+        model, x_data, y_data, epochs, batch_size, logdir, early_stopping)
 
     # Evaluate
     results_evaluation = {"strict_accuracy": 0.0,
@@ -81,14 +81,14 @@ if __name__ == "__main__":
         "./transformers_models/biobert_factoid_pytorch")
     encoder = TFBertModel.from_pretrained(
         "./transformers_models/biobert_factoid_pytorch", from_pt=True)
-
+        
     max_len = 200
-    batch_size = 5
-    epochs = 6
-    learning_rate = 1e-8
+    batch_size = 30
+    epochs = 50
+    learning_rate = 5e-7
     test_execution = -1
 ###########################################################
     start_time = time.time()
     execute_factoid(date, logdir, dataset_path_train,dataset_path_test, tokenizer, encoder,
-                    max_len, batch_size, epochs, learning_rate, test_execution=test_execution, evaluation=False)
+                    max_len, batch_size, epochs, learning_rate, test_execution=test_execution, evaluation=False,early_stopping=True)
     print("--- %s seconds ---" % (time.time() - start_time))
