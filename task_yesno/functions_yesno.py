@@ -19,7 +19,7 @@ import numpy as np
 
 BATCH_SIZE = 4
 VALIDATION_SPLIT = 0.15
-EPOCHS = 50
+EPOCHS = 80
 
 
 def evaluate_yes_no(predicted, target):
@@ -64,14 +64,13 @@ def apply_pooling(data, pool_size=1):
 
 def model_creation(hidden_layers, hidden_units, act_function, learning_rate, optimizer):
     model = tf.keras.models.Sequential()
-    # model.add(MaxPooling1D(5))
     for i in range(hidden_layers):
         model.add(Dense(hidden_units, activation = act_function))
-    model.add(Dense(2))
+    model.add(Dense(1, activation = 'sigmoid'))
 
     model.compile(
         optimizer=optimizer(learning_rate=learning_rate),
-        loss='binary_crossentropy',
+        loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=['accuracy'],
     )
 
@@ -86,7 +85,7 @@ def run_yesno_training(model, x_train, y_train, pool_size, batch_size, logdir):
         epochs = EPOCHS,
         validation_split = VALIDATION_SPLIT,
         callbacks = [
-            tf.keras.callbacks.TensorBoard(logdir),  # log metrics
+            # tf.keras.callbacks.TensorBoard(logdir),  # log metrics
         #     hp.KerasCallback(logdir, hparams),  # log hparams
         ]
     )

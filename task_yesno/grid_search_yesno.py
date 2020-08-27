@@ -4,14 +4,14 @@ from transformers import BertTokenizer, TFBertModel
 from train_yesno import execute_yesno
 from functions_yesno import get_embedding, enconde_dataset
 import tensorflow as tf
-from tensorflow.keras.optimizers import RMSprop, Adam
+from tensorflow.keras.optimizers import RMSprop, Adam, SGD
 
 if __name__ == "__main__":
     grid_params = {
                 'hidden_layers': [1, 2],
                 'hidden_units': [50, 100, 150],
                 'act_funct': ['relu', 'tanh'],
-                'learning_rate': [1e-7, 1e-8, 5e-7],
+                'learning_rate': [1e-6, 1e-5, 1e-7],
                 'optimizer': [Adam, RMSprop],
                 'pool_size': [1, 4, 8],
                 'batch_size': [None, 8, 32]

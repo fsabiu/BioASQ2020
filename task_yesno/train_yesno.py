@@ -3,7 +3,7 @@ import numpy as np
 from datetime import datetime
 from tensorboard.plugins.hparams import api as hp
 import tensorflow as tf
-from tensorflow.keras.optimizers import RMSprop, Adam
+from tensorflow.keras.optimizers import RMSprop, Adam, SGD
 
 def execute_yesno(
         x_train, y_train,
@@ -62,9 +62,8 @@ def execute_yesno(
     return training_model
 
 def evaluate_model(model, x_test, y_test):
-    y_pred = model.predict(x_test)
+    y_pred = model.predict_classes(x_test)
     print(y_pred)
-    y_pred = [np.argmax(el) for el in y_pred]
     print("Predicted: ", y_pred)
     print("Corrected: ", y_test)
     count = 0
@@ -84,10 +83,10 @@ if __name__ == "__main__":
     print("Getting data")
     x_train, y_train, x_test, y_test = enconde_dataset(emb, pool_size=1, test_size=0.2)
 
-    hidden_layers = 4
+    hidden_layers = 1
     hidden_units = 100
     act_funct = 'relu'
-    learning_rate = 1e-5
+    learning_rate = 1e-6
     optimizer = RMSprop
     pool_size = 1
     batch_size = None
