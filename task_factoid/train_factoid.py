@@ -17,6 +17,7 @@ def execute_factoid(date, logdir, dataset_path_train, dataset_path_test, tokeniz
     x_data, y_data, _ = encode_dataset(
         dataset_path_train, max_len, tokenizer, test_execution)
 
+
     x_data_test, _, answer_list_test = encode_dataset(
         dataset_path_test, max_len, tokenizer,test_execution)
 

@@ -1,5 +1,7 @@
 from functions_yesno import get_embedding, enconde_dataset, model_creation, run_yesno_training, evaluate_yes_no, EPOCHS
 import numpy as np
+import os
+from random import seed
 from datetime import datetime
 from tensorboard.plugins.hparams import api as hp
 import tensorflow as tf
@@ -15,12 +17,17 @@ def execute_yesno(
     date = datetime.now().strftime("%Y%m%d_%H%M%S")+"/" if date is None else date
     logdir = "./task_yesno/runs/"+str(date) if logdir is None else logdir
 
-    training_model = model_creation(hidden_layers, hidden_units, act_funct, learning_rate, optimizer)
-    training_model = run_yesno_training(training_model, x_train, y_train, pool_size=pool_size, batch_size=batch_size, logdir=logdir)
+    logdir=os.path.join("./task_yesno/runs/"+str(date))
+
+    model = model_creation(hidden_layers, hidden_units, act_funct, learning_rate, optimizer)
+    
+    results_evaluation = evaluate_model(model, x_train, y_train)
+    training_model = run_yesno_training(model, x_train, y_train, pool_size=pool_size, batch_size=batch_size, logdir=logdir)
 
     results_evaluation = {'accuracy':0,'macro_average_f_measure':0}
     if x_test is not None and y_test is not None:
-        results_evaluation = evaluate_model(training_model, x_test, y_test)
+        #results_evaluation = evaluate_model(training_model, x_test, y_test)
+        results_evaluation = evaluate_model(training_model, x_train, y_train)
 
     # Setup tensorboard
     HP_MODEL = hp.HParam('model')

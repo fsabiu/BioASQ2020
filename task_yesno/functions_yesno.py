@@ -85,8 +85,7 @@ def run_yesno_training(model, x_train, y_train, pool_size, batch_size, logdir):
         epochs = EPOCHS,
         validation_split = VALIDATION_SPLIT,
         callbacks = [
-            # tf.keras.callbacks.TensorBoard(logdir),  # log metrics
-        #     hp.KerasCallback(logdir, hparams),  # log hparams
+            tf.keras.callbacks.TensorBoard(logdir),  # log metrics
         ]
     )
     model.summary()
