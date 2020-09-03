@@ -1,6 +1,5 @@
-from functions_yesno import get_embedding, enconde_dataset, model_creation, run_yesno_training, evaluate_yes_no, EPOCHS
+from functions_yesno import get_embedding, enconde_dataset, model_creation, run_yesno_training, evaluate_yes_no, test_final_model, evaluate_model, EPOCHS
 import numpy as np
-import os
 from random import seed
 from datetime import datetime
 from tensorboard.plugins.hparams import api as hp
@@ -17,17 +16,12 @@ def execute_yesno(
     date = datetime.now().strftime("%Y%m%d_%H%M%S")+"/" if date is None else date
     logdir = "./task_yesno/runs/"+str(date) if logdir is None else logdir
 
-    logdir=os.path.join("./task_yesno/runs/"+str(date))
-
     model = model_creation(hidden_layers, hidden_units, act_funct, learning_rate, optimizer)
-    
-    results_evaluation = evaluate_model(model, x_train, y_train)
     training_model = run_yesno_training(model, x_train, y_train, pool_size=pool_size, batch_size=batch_size, logdir=logdir)
 
     results_evaluation = {'accuracy':0,'macro_average_f_measure':0}
     if x_test is not None and y_test is not None:
-        #results_evaluation = evaluate_model(training_model, x_test, y_test)
-        results_evaluation = evaluate_model(training_model, x_train, y_train)
+        results_evaluation = evaluate_model(training_model, x_test, y_test)
 
     # Setup tensorboard
     HP_MODEL = hp.HParam('model')
@@ -68,35 +62,29 @@ def execute_yesno(
 
     return training_model
 
-def evaluate_model(model, x_test, y_test):
-    y_pred = model.predict_classes(x_test)
-    print(y_pred)
-    print("Predicted: ", y_pred)
-    print("Corrected: ", y_test)
-    count = 0
-    for i, e in enumerate(y_test):
-        if y_pred[i] != e:
-            count+=1
-    print("Elementi diversi: ", count, "/", len(y_test))
-
-    evaluation = evaluate_yes_no(y_pred, y_test)
-    print(evaluation)
-    return evaluation
 
 
 if __name__ == "__main__":
-    print("Getting embedding ")
+    print("Getting embedding ") # To create embedding model see load_training_data notebook
     emb = get_embedding(file_embedding = "./embedding_yes_no_augmented.emb")
     print("Getting data")
-    x_train, y_train, x_test, y_test = enconde_dataset(emb, pool_size=1, test_size=0.2)
+    # x_train, y_train, x_test, y_test = enconde_dataset(emb, pool_size=1, test_size=0.2)
+    x_train, y_train = enconde_dataset(emb)
 
-    hidden_layers = 1
-    hidden_units = 100
+    hidden_layers = 2
+    hidden_units = 150
     act_funct = 'relu'
-    learning_rate = 1e-6
+    learning_rate = 1e-5
     optimizer = RMSprop
     pool_size = 1
     batch_size = None
 
-    execute_yesno(x_train, y_train, hidden_layers, hidden_units, act_funct, learning_rate, optimizer, pool_size, batch_size, x_test=x_test, y_test=y_test)
+    # execute_yesno(x_train, y_train, hidden_layers, hidden_units, act_funct, learning_rate, optimizer, pool_size, batch_size, x_test, y_test)
+    final_model = execute_yesno(x_train, y_train, hidden_layers, hidden_units, act_funct, learning_rate, optimizer, pool_size, batch_size)
+
+    # Test
+    # Reading test set
+    # dataset_path = "./data/test_8b.json"
+    # print("Evalutating final model")
+    # results_evaluation = test_final_model(final_model, dataset_path)
 

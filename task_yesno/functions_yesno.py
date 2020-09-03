@@ -17,9 +17,8 @@ from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, MaxPooling1D, Embe
 from tensorflow.keras.models import Model
 import numpy as np
 
-BATCH_SIZE = 4
 VALIDATION_SPLIT = 0.15
-EPOCHS = 80
+EPOCHS = 500
 
 
 def evaluate_yes_no(predicted, target):
@@ -29,7 +28,7 @@ def evaluate_yes_no(predicted, target):
     f1_n=f1_score(y_true=target, y_pred=predicted, average='binary', pos_label=0)
     macro_average_f_measure=(f1_y+f1_n)/2
 
-    return {'accuracy':accuracy,'macro_average_f_measure':macro_average_f_measure}
+    return {'accuracy':accuracy,'f1_yes':f1_y, 'f1_no':f1_n ,'macro_average_f_measure':macro_average_f_measure}
 
 def get_embedding(data = None, file_embedding = None):
     if file_embedding is None:
@@ -45,10 +44,8 @@ def get_embedding(data = None, file_embedding = None):
 def enconde_dataset(embeddings, pool_size=1, test_size=None):
     # Data includes questions (0) and snippets (2)
     data = np.array([np.concatenate((np.array(el[0]), np.array(el[2])),axis=None) for el in embeddings])
-
     labels = np.array([el[1] for el in embeddings])
 
-    # Lo split potrebbe essere inutile dal momento che il validation è creato dal fit del modello
     if test_size is not None:
         x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=test_size)
         x_train = apply_pooling(x_train, pool_size)
@@ -80,14 +77,49 @@ def run_yesno_training(model, x_train, y_train, pool_size, batch_size, logdir):
     if pool_size != 1:
         x_train = apply_pooling(x_train, pool_size)
 
+    earlystop_callback = tf.keras.callbacks.EarlyStopping(
+        monitor='val_loss', mode = "min", min_delta = 0.001, patience=10, restore_best_weights=True)
+
     model.fit(x_train, y_train, 
-        batch_size = BATCH_SIZE,
+        batch_size = batch_size,
         epochs = EPOCHS,
         validation_split = VALIDATION_SPLIT,
         callbacks = [
             tf.keras.callbacks.TensorBoard(logdir),  # log metrics
+            earlystop_callback
         ]
     )
     model.summary()
 
     return model
+
+
+def evaluate_model(model, x_test, y_test):
+    y_pred = model.predict_classes(x_test)
+    # print("Predicted: ", y_pred)
+    # print("Corrected: ", y_test)
+    count = 0
+    for i, e in enumerate(y_test):
+        if y_pred[i] != e:
+            count+=1
+    print("Elementi diversi: ", count, "/", len(y_test))
+
+    evaluation = evaluate_yes_no(y_pred, y_test)
+    print(evaluation)
+    return evaluation
+
+def test_final_model(model, test_path):
+    if False:
+        data = load_data(test_path, "yesno")
+        embeddings_elmo_pubmed = ELMoEmbeddings('pubmed') 
+        pooling_model = DocumentPoolEmbeddings([embeddings_elmo_pubmed])
+        test_data_embedded = generate_embeddings_yesno_pooling(pooling_model, data, "embedding_test.emb")
+    else:
+        test_data_embedded = load_embeddings('embedding_test.emb')
+
+    data = np.array([np.concatenate((np.array(el[0]), np.array(el[2])),axis=None) for el in test_data_embedded])
+    labels = np.array([el[1] for el in test_data_embedded])
+
+    final_eval = evaluate_model(model, data, labels)
+    return final_eval
+
