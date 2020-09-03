@@ -59,8 +59,11 @@ def apply_pooling(data, pool_size=1):
     output = MaxPool1D(pool_size=pool_size)(data)
     return np.squeeze(output)
 
-def model_creation(hidden_layers, hidden_units, act_function, learning_rate, optimizer):
+def model_creation(hidden_layers, hidden_units, act_function, learning_rate, optimizer, size=None):
     model = tf.keras.models.Sequential()
+    if size is not None:
+        model.add(tf.keras.Input(shape=(size,)))
+
     for i in range(hidden_layers):
         model.add(Dense(hidden_units, activation = act_function))
     model.add(Dense(1, activation = 'sigmoid'))
@@ -77,6 +80,7 @@ def run_yesno_training(model, x_train, y_train, pool_size, batch_size, logdir):
     if pool_size != 1:
         x_train = apply_pooling(x_train, pool_size)
 
+
     earlystop_callback = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss', mode = "min", min_delta = 0.001, patience=10, restore_best_weights=True)
 
@@ -89,6 +93,10 @@ def run_yesno_training(model, x_train, y_train, pool_size, batch_size, logdir):
             earlystop_callback
         ]
     )
+
+    if False:
+        model.save_weights(logdir+"final_model", save_format="h5")
+
     model.summary()
 
     return model
