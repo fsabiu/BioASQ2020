@@ -163,7 +163,7 @@ def test_list_model(trained_model, tokenizer, x_data_test, answer_list):
     for i in range(len(x_data_test[0])):
         all_tokens = tokenizer.convert_ids_to_tokens(x_data_test[0][i])
 
-        if(all_tokens[0:3]!=last_elem):#TODO:Fare questo controllo meno suino
+        if(all_tokens[0:3]!=last_elem):#TODO:Fix this
             last_elem_count += 1
             last_elem=all_tokens[0:3]
             merge_answer_list.append([answer_list[i]])

@@ -38,4 +38,4 @@ for elem in params_list:
         execute_factoid(date=date, logdir=logdir, dataset_path_train=dataset_path_train, dataset_path_test=dataset_path_test, tokenizer=tokenizer, encoder=encoder,
                     max_len=max_len, batch_size=batch_size, epochs=epochs, test_execution=test_execution,learning_rate=learning_rate)
     except:
-        print("Tensorflow chelladi!!!!")
+        print("Error!!!!")
