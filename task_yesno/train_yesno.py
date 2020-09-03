@@ -82,9 +82,4 @@ if __name__ == "__main__":
     # execute_yesno(x_train, y_train, hidden_layers, hidden_units, act_funct, learning_rate, optimizer, pool_size, batch_size, x_test, y_test)
     final_model = execute_yesno(x_train, y_train, hidden_layers, hidden_units, act_funct, learning_rate, optimizer, pool_size, batch_size)
 
-    # Test
-    # Reading test set
-    # dataset_path = "./data/test_8b.json"
-    # print("Evalutating final model")
-    # results_evaluation = test_final_model(final_model, dataset_path)
 

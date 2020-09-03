@@ -11,7 +11,6 @@ from sklearn.metrics import accuracy_score, f1_score
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.data import load_data, generate_embeddings_yesno, generate_embeddings_yesno_pooling, load_embeddings
-
 from flair.embeddings import ELMoEmbeddings, DocumentPoolEmbeddings
 from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, MaxPooling1D, Embedding, InputLayer
 from tensorflow.keras.models import Model
@@ -36,7 +35,6 @@ def get_embedding(data = None, file_embedding = None):
         pooling_model = DocumentPoolEmbeddings([embeddings_elmo_pubmed])
         embeddings = generate_embeddings_yesno_pooling(pooling_model, data, "embedding_yes_no.emb")
     else:
-        # ../data/embedding_yes_no.emb
         embeddings = load_embeddings(file_embedding)
     return embeddings
 
@@ -80,7 +78,6 @@ def run_yesno_training(model, x_train, y_train, pool_size, batch_size, logdir):
     if pool_size != 1:
         x_train = apply_pooling(x_train, pool_size)
 
-
     earlystop_callback = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss', mode = "min", min_delta = 0.001, patience=10, restore_best_weights=True)
 
@@ -110,7 +107,7 @@ def evaluate_model(model, x_test, y_test):
     for i, e in enumerate(y_test):
         if y_pred[i] != e:
             count+=1
-    print("Elementi diversi: ", count, "/", len(y_test))
+    print("Wrong answers: ", count, "/", len(y_test))
 
     evaluation = evaluate_yes_no(y_pred, y_test)
     print(evaluation)
