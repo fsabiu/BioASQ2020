@@ -186,10 +186,10 @@ def test_factoid_model(trained_model, tokenizer, x_data_test, answer_list):
 
     predicted_cleaned=[[elem for elem,score in question] for question in predicted]
 
-    #print(predicted_cleaned)
+    print(predicted_cleaned)
     #print(merge_answer_list)
     evaluation=evaluate_factoid(predicted=predicted_cleaned, target=merge_answer_list)
-    print(evaluation)
+    #print(evaluation)
     return evaluation
 
 def extract_answer(start_scores, end_scores, all_tokens,token_type_ids):
